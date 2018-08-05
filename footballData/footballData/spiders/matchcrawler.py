@@ -14,7 +14,9 @@ class MatchSpider(scrapy.Spider):
 
     def __init__(self):
         self.seasons_selected = ['2017/2018']
-        self.countries_selected = ['Germany','England','Spain','Italy','France']
+        #self.countries_selected = ['Germany', 'Spain', 'Italy', 'France']
+        self.countries_selected = ['England']
+        self.leagues_selected = ['Premier League']
 
         allowed_domains = ["reuters.mx-api.enetscores.com", 'json.mx-api.enetscores.com']
         self.start_urls = ["http://reuters.mx-api.enetscores.com/page/xhr/standings/"]
@@ -37,10 +39,12 @@ class MatchSpider(scrapy.Spider):
     def parseLeague(self,response):
         country = response.meta['country']
         leagues = response.xpath('//div[@class="mx-dropdown-container mx-flexbox mx-float-left mx-template-dropdown"]/div/ul/li/text()').extract()
+
         for league in leagues:
-            href = response.xpath('//li[text()[contains(.,"'+league+'")]]/@data-snippetparams').re_first('"params":"(.+)"')
-            url = 'http://reuters.mx-api.enetscores.com/page/xhr/standings/' + href
-            yield scrapy.Request(url, callback=self.parseSeason,meta={'country':country,'league':league})
+            if league in self.leagues_selected:
+                href = response.xpath('//li[text()[contains(.,"'+league+'")]]/@data-snippetparams').re_first('"params":"(.+)"')
+                url = 'http://reuters.mx-api.enetscores.com/page/xhr/standings/' + href
+                yield scrapy.Request(url, callback=self.parseSeason,meta={'country':country,'league':league})
       
     #SEASON  
     def parseSeason(self,response):
@@ -90,7 +94,7 @@ class MatchSpider(scrapy.Spider):
         season = response.meta['season']
         stage = response.meta['stage']
         matchesDataEventList = response.xpath('//a[contains(@class, "mx-link")]/@data-event').extract()
-        dateList = response.xpath('//span[@class="mx-time-startdate mx-break-small"]/text()').extract()
+        dateList = response.xpath('//span[@class="mx-time-startdatetime mx-break-small"]/text()').extract()
      
         matchList = list()
         if len(self.matches) >= 1:
@@ -125,8 +129,8 @@ class MatchSpider(scrapy.Spider):
         fullTeamNameAway = response.xpath('//div[@class="mx-team-away-name mx-break-small"]/a/text()').re('\t+([^\n]+[^\t]+)\n+\t+')
         teamIdHome = response.xpath('//div[@class="mx-team-home-name mx-break-small"]/a/@data-team').extract()
         teamIdAway = response.xpath('//div[@class="mx-team-away-name mx-break-small"]/a/@data-team').extract()
-        homeAcronym = response.xpath('//div[@class="mx-team-away-name mx-show-small"]/a/text()').re('\t+([^\n]+[^\t]+)\n+\t+')
-        awayAcronym = response.xpath('//div[@class="mx-team-home-name mx-show-small"]/a/text()').re('\t+([^\n]+[^\t]+)\n+\t+')
+        awayAcronym = response.xpath('//div[@class="mx-team-away-name mx-show-small"]/a/text()').re('\t+([^\n]+[^\t]+)\n+\t+')
+        homeAcronym = response.xpath('//div[@class="mx-team-home-name mx-show-small"]/a/text()').re('\t+([^\n]+[^\t]+)\n+\t+')
         homeTeamGoal = response.xpath('//div[@class="mx-res-home mx-js-res-home"]/@data-res').extract_first()
         awayTeamGoal = response.xpath('//div[@class="mx-res-away mx-js-res-away"]/@data-res').extract_first()
         
@@ -194,7 +198,7 @@ class MatchSpider(scrapy.Spider):
             match['goal'] = goal
             match['shoton'] = shoton
             match['shotoff'] = shotoff
-            match['foulcommit'] = foulcommit
+            #match['foulcommit'] = foulcommit
             match['card'] = card
             match['cross'] = cross
             match['corner'] = corner

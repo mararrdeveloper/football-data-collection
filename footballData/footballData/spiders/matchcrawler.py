@@ -13,12 +13,11 @@ class MatchSpider(scrapy.Spider):
     name="match"
 
     def __init__(self):
-        self.seasons_selected = ['2017/2018']
-        #self.countries_selected = ['Germany', 'Spain', 'Italy', 'France']
-        self.countries_selected = ['England']
-        self.leagues_selected = ['Premier League']
+        self.seasons_selected = ['2014/2015', '2015/2016', '2016/2017', '2017/2018', '2018/2019']
+        self.countries_selected = ['England', 'Germany', 'Spain', 'Italy', 'France']
+        self.leagues_selected = ['Premier League', 'Primera Division', '1. Bundesliga', 'Serie A', 'Ligue 1']
 
-        allowed_domains = ["reuters.mx-api.enetscores.com", 'json.mx-api.enetscores.com']
+        #allowed_domains = ["reuters.mx-api.enetscores.com", 'json.mx-api.enetscores.com']
         self.start_urls = ["http://reuters.mx-api.enetscores.com/page/xhr/standings/"]
         self.stages = []
         self.matches = []

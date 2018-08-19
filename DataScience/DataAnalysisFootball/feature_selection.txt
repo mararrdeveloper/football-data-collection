@@ -1,0 +1,10 @@
+As part of this exercise you are going to have to do some feature selection and discover the most important variables in the dataset.
+
+There are many choices for feature selection in scikit-learn: http://scikit-learn.org/stable/modules/feature_selection.html.
+
+The easiest way to move forward is to use the SelectPerentile function (http://scikit-learn.org/stable/modules/generated/sklearn.feature_selection.SelectPercentile.html#sklearn.feature_selection.SelectPercentile) which by default return the top 10% features.
+
+Recursive feature elimination (http://scikit-learn.org/stable/modules/generated/sklearn.feature_selection.RFE.html#sklearn.feature_selection.RFE) is a longer, but generally better, method.
+
+Note that feature selection is less relevant for random forests, as random forests implicitly perform feature selection too. The same is true for gradient boosted trees. However, don't be surprised if in some cases a simple classifier with some clever feature selection, like logistic regression, outperforms a more advanced algorithm!
+

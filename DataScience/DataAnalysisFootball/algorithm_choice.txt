@@ -1,0 +1,20 @@
+So, these algorithms were chosen?
+
+Random forests are always a reasonable choice to use. Random forests and gradient boosted trees (especially the implementation XGBoost https://github.com/dmlc/xgboost) are very popular and successful algorithms, so that they are always a good idea to try. Extra trees is a classifier similar to those, which is a good idea to try since it is available in scikit-learn.
+
+Naive Bayes,k-nn and logistic regression, are simple models which can be useful both as a benchmark, but they can also work surprisingly well sometimes. They are resistant to overfitting (especially naive Bayes), and it is good practice to compare more complicated models to these ones.
+
+Support vector machines used to be very popular, but they have fallen somewhat out of fashion, as they can be slow and some times they achieve quite similar performance to logistic regression, which is a simpler model.
+
+Quadratic Discriminant analysis is another linear classifier, not very popular, which can be a good idea to try out, if you see that other linear classifiers (e.g. logistic regression) are performing well.
+
+Neural networks are always a good idea to try out. They are super powerful, but they need tons of parameter tuning, so they are not always easy to train.
+
+In general, it is good if you think algorithms in terms of families and degrees of complexity. If you had unlimited resources, you could just try out every algorithm out there, and see what works best. In absence of unlimited resources, you can't go wrong if you follow these steps:
+
+1) Start with some super simple algorithms as a benchmark (logistic regression, naive babes, maybe k-nn)
+2) Try out the most successful general purpose algorithms (random forests, gradient boosted trees)
+3) Try out other choices of more powerful algorithms (neural networks, SVMs, etc.)
+4) When you've done that start looking into stacking classifiers (Kaggle has a good article on that http://blog.kaggle.com/2016/12/27/a-kagglers-guide-to-model-stacking-in-practice/) or other forms of ensembling (e.g. majority voting)
+
+Many algorithms are related (e.g. neural networks, SVMs and logistic regression are based on similar principles), so if you see a basic version of the family performing well, then the more complicated versions might work better and are worth a try.

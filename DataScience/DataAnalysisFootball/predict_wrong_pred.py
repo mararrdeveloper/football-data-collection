@@ -13,7 +13,11 @@ naive_predictor, df = _naive_predictor()
 df['B365_pred']=naive_predictor
 df_incorrect=df[df['FTR']!=df['B365_pred']]
 #df[target_name]=df['FTR']!=df['B365_pred']
-df_incorrect=df_incorrect[['B365H', 'B365D','B365A','FTR']]
+df_incorrect=df_incorrect[['B365H', 'B365D','B365A','home_team_goals_for', 'home_team_goals_against', 
+    'home_team_corners_for', 'home_team_corners_against', 'home_team_shotson_for', 'home_team_shotson_against', 
+    'home_team_shotsoff_for', 'home_team_shotsoff_against', 'away_team_goals_for', 'away_team_goals_against', 
+    'away_team_corners_for', 'away_team_corners_against', 'away_team_shotson_for', 'away_team_shotson_against', 
+    'away_team_shotsoff_for', 'away_team_shotsoff_against','FTR']]
 df_incorrect.to_csv('data/temp_data.csv')
 target=df_incorrect[target_name]
 

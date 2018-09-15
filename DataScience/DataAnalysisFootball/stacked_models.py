@@ -21,10 +21,10 @@ final_pred=[]
 model2, X2, target2 = get_predictor_on_wrong(clf2)
 preds2 = cross_val_predict(model2, X2, target2, cv=10)
 
-iter_values = X1.drop(labels=['player0_B365','player0_Aces','player0_PS',
-    'player0_EX','player0_LB','player1_B365','player1_Aces','player1_PS','player1_EX',
-    'player1_LB','B365_pred'],axis=1).values
-             
+#drop(labels=['player0_B365','player0_Aces','player0_PS',
+    #'player0_EX','player0_LB','player1_B365','player1_Aces','player1_PS','player1_EX',
+iter_values = X1.values
+print(iter_values.shape)        
 #Go through each row and if classifier1 predicts B365 is going to get it wrong
 #then use the second model to make a prediction (1 or 0). Otherwise append -2.
 for pred,datapoint in zip(preds1,iter_values):

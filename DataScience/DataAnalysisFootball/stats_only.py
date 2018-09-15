@@ -4,8 +4,11 @@ import helpers
 
 from helpers import test_clfs, load_data, print_results, get_baseline
 
-X,target=load_data(columns_to_drop=['player0_B365','player0_Aces','player0_PS',
-'player0_EX','player0_LB','player1_B365','player1_Aces','player1_PS','player1_EX','player1_LB'])
+X,target=load_data(columns_to_keep=['league_id', 'home_team_goals_for', 'home_team_goals_against', 
+    'home_team_corners_for', 'home_team_corners_against', 'home_team_shotson_for', 'home_team_shotson_against', 
+    'home_team_shotsoff_for', 'home_team_shotsoff_against', 'away_team_goals_for', 'away_team_goals_against', 
+    'away_team_corners_for', 'away_team_corners_against', 'away_team_shotson_for', 'away_team_shotson_against', 
+    'away_team_shotsoff_for', 'away_team_shotsoff_against','FTR'], target_name='FTR')
 
 res=test_clfs(clfs=helpers.clfs,X=X,target=target,cv=10)
 

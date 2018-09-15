@@ -13,7 +13,7 @@ class MatchSpider(scrapy.Spider):
     name="match"
 
     def __init__(self):
-        self.seasons_selected = ['2014/2015', '2015/2016', '2016/2017', '2017/2018', '2018/2019']
+        self.seasons_selected = ['2018/2019']
         self.countries_selected = ['England', 'Germany', 'Spain', 'Italy', 'France']
         self.leagues_selected = ['Premier League', 'Primera Division', '1. Bundesliga', 'Serie A', 'Ligue 1']
 

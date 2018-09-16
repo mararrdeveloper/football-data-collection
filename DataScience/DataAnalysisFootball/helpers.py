@@ -18,8 +18,8 @@ import pandas as pd
 import numpy as np
 
 clfs = [#LogisticRegression(),  
-        # RandomForestClassifier(n_estimators=200),
-         ExtraTreesClassifier(n_estimators=50),
+        RandomForestClassifier(n_estimators=200),
+        # ExtraTreesClassifier(n_estimators=50),
         # KNeighborsClassifier(5),
         # SVC(kernel="linear", C=0.025,degree=2),
         # SVC(gamma=2, C=1, probability=True),
@@ -91,7 +91,7 @@ def load_data(columns_to_keep=None,columns_to_drop=None,scaler=StandardScaler(),
 def _data_load_helper(data_path = "data/predict_stats_odds_1.csv"):
     df = pd.read_csv(data_path)
 
-    df = df.dropna(axis=0, how='any')
+    df = df.fillna(0)
     df = df.reset_index()
     return df
     

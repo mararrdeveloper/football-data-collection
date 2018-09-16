@@ -18,7 +18,7 @@ import pandas as pd
 import numpy as np
 
 clfs = [#LogisticRegression(),  
-        # RandomForestClassifier(n_estimators=150),
+        # RandomForestClassifier(n_estimators=200),
          ExtraTreesClassifier(n_estimators=50),
         # KNeighborsClassifier(5),
         # SVC(kernel="linear", C=0.025,degree=2),

@@ -244,5 +244,5 @@ data['IsTraining'] = False
 
 previous_data = pd.read_csv(data_folder + '/data.csv')
 data = previous_data.append(data)
-data.to_csv(data_folder + '/predict_stats_odds.csv',index=False)
+data.to_csv(data_folder + '/predict_stats.csv',index=False)
 

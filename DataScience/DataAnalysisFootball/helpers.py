@@ -88,10 +88,10 @@ def load_data(columns_to_keep=None,columns_to_drop=None,scaler=StandardScaler(),
 
     return _preprocess_data(df,columns_to_keep,columns_to_drop,scaler,target_name, is_training)
     
-def _data_load_helper(data_path = "data/predict_stats.csv"):
+def _data_load_helper(data_path = "data/predict_stats_odds_1.csv"):
     df = pd.read_csv(data_path)
 
-    df = df.dropna(axis=0, how='all')
+    df = df.dropna(axis=0, how='any')
     df = df.reset_index()
     return df
     

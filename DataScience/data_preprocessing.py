@@ -97,131 +97,95 @@ def get_full_name(name):
     if name in name_dict:
         return name_dict[name]
     return name
-    
-def get_match_features(match, x = 10):
-    ''' Create match specific features for a given match. '''
-    
-    #Define variables
-    date = match.Date
-    home_team = get_full_name(match.HomeTeam)
-    away_team = get_full_name(match.AwayTeam)
-    print(date)
-    #Get last x matches of home and away team
-    matches_home_team = get_last_matches(date, home_team, x = 10)
-    matches_away_team = get_last_matches(date, away_team, x = 10)
-    
-    goals_for_home = goals_against_home = corners_for_home = corners_against_home = shotson_for_home = shotson_against_home = shotsoff_for_home = shotsoff_against_home = 0
-    
-    for index, row in matches_home_team.iterrows():
-        isHome = True if  row['HomeTeam'] == home_team else False
-        teamId = row['HomeTeamId'] if isHome else row['AwayTeamId']
-        teamAgainstId = row['HomeTeamId'] if not isHome else row['AwayTeamId']
 
-        match_goals_for = df_goals[(df_goals['TeamId'] == teamId) & (df_goals['MatchId'] == row['ExternalId'])]
-        goals_for_home += match_goals_for.shape[0]
-        
-        match_goals_against = df_goals[(df_goals['TeamId'] == teamAgainstId) & (df_goals['MatchId'] == row['ExternalId'])]
-        goals_against_home += match_goals_against.shape[0]
-        
-        match_corners_for = df_corners[(df_corners['TeamId'] == teamId) & (df_corners['MatchId'] == row['ExternalId'])]
-        corners_for_home += match_corners_for.shape[0]
-        
-        match_corners_against = df_corners[(df_corners['TeamId'] == teamAgainstId) & (df_corners['MatchId'] == row['ExternalId'])]
-        corners_against_home += match_corners_against.shape[0]
-        
-        match_shotson_for = df_shots_on[(df_shots_on['TeamId'] == teamId) & (df_shots_on['MatchId'] == row['ExternalId'])]
-        shotson_for_home += match_shotson_for.shape[0]
-        
-        match_shotson_against = df_shots_on[(df_shots_on['TeamId'] == teamAgainstId) & (df_shots_on['MatchId'] == row['ExternalId'])]
-        shotson_against_home += match_shotson_against.shape[0]
-        
-        match_shotsoff_for = df_shots_off[(df_shots_off['TeamId'] == teamId) & (df_shots_off['MatchId'] == row['ExternalId'])]
-        shotsoff_for_home += match_shotson_for.shape[0]
-        
-        match_shotsoff_against = df_shots_off[(df_shots_off['TeamId'] == teamAgainstId) & (df_shots_off['MatchId'] == row['ExternalId'])]
-        shotsoff_against_home += match_shotson_against.shape[0]
-        
-        match_possession_for = df_possessions[(df_possessions['MatchId'] == row['ExternalId'])]['HomePossession']
-        match_possession_against = df_possessions[(df_possessions['MatchId'] == row['ExternalId'])]['AwayPossession']
-        
-    goals_for_away = goals_against_away = corners_for_away = corners_against_away = shotson_for_away = shotson_against_away = shotsoff_for_away = shotsoff_against_away = 0
-    for index, row in matches_away_team.iterrows():
-        isHome = True if  row['HomeTeam'] == away_team else False
-        teamId = row['HomeTeamId'] if isHome else row['AwayTeamId']
-        teamAgainstId = row['HomeTeamId'] if not isHome else row['AwayTeamId']
-
-        match_goals_for = df_goals[(df_goals['TeamId'] == teamId) & (df_goals['MatchId'] == row['ExternalId'])]
-        goals_for_away += match_goals_for.shape[0]
-        
-        match_goals_against = df_goals[(df_goals['TeamId'] == teamAgainstId) & (df_goals['MatchId'] == row['ExternalId'])]
-        goals_against_away += match_goals_against.shape[0]
-        
-        match_corners_for = df_corners[(df_corners['TeamId'] == teamId) & (df_corners['MatchId'] == row['ExternalId'])]
-        corners_for_away += match_corners_for.shape[0]
-        
-        match_corners_against = df_corners[(df_corners['TeamId'] == teamAgainstId) & (df_corners['MatchId'] == row['ExternalId'])]
-        corners_against_away += match_corners_against.shape[0]
-        
-        match_shotson_for = df_shots_on[(df_shots_on['TeamId'] == teamId) & (df_shots_on['MatchId'] == row['ExternalId'])]
-        shotson_for_away += match_shotson_for.shape[0]
-        
-        match_shotson_against = df_shots_on[(df_shots_on['TeamId'] == teamAgainstId) & (df_shots_on['MatchId'] == row['ExternalId'])]
-        shotson_against_away += match_shotson_against.shape[0]
-        
-        match_shotsoff_for = df_shots_off[(df_shots_off['TeamId'] == teamId) & (df_shots_off['MatchId'] == row['ExternalId'])]
-        shotsoff_for_away += match_shotson_for.shape[0]
-        
-        match_shotsoff_against = df_shots_off[(df_shots_off['TeamId'] == teamAgainstId) & (df_shots_off['MatchId'] == row['ExternalId'])]
-        shotsoff_against_away += match_shotson_against.shape[0]
-        
-        match_possession_for = df_possessions[(df_possessions['MatchId'] == row['ExternalId'])]['HomePossession']
-        match_possession_against = df_possessions[(df_possessions['MatchId'] == row['ExternalId'])]['AwayPossession']
-    
-        #print("for " + str(match_goals_for.shape[0]))
-        #print("against " +  str(match_goals_against.shape[0]))
-
-        #print("for " + str(np.mean(match_possession_for)))
-        #print("against " +  str(np.mean(match_possession_against)))
-#     #Get last x matches of both teams against each other
-#     last_matches_against = get_last_matches_against_eachother(matches, date, home_team, away_team, x = 3)
-    
+def get_team_features(match_id, team_id, is_home):
     result = pd.DataFrame()
+    #Create match features)
+    match_goals_for = df_goals[(df_goals['TeamId'] == team_id) & (df_goals['MatchId'] == match_id)]
+    result.loc[0, 'team_goals_for'] = match_goals_for.shape[0]
+    match_goals_against = df_goals[(df_goals['TeamId'] != team_id) & (df_goals['MatchId'] == match_id)]
+    result.loc[0, 'team_goals_against'] = match_goals_against.shape[0]
     
-   # result.loc[0, 'match_api_id'] = match.match_api_id
-    result.loc[0, 'league_id'] = match.Div
+    match_corners_for = df_corners[(df_corners['TeamId'] == team_id) & (df_corners['MatchId'] == match_id)]
+    result.loc[0, 'team_corners_for'] = match_corners_for.shape[0]
+    match_corners_against = df_corners[(df_corners['TeamId'] != team_id) & (df_corners['MatchId'] == match_id)]
+    result.loc[0, 'team_corners_against'] = match_corners_against.shape[0]
 
-#     #Create match features
-    result.loc[0, 'home_team_goals_for'] = goals_for_home
-    result.loc[0, 'home_team_goals_against'] = goals_against_home
+    match_shotson_for = df_shots_on[(df_shots_on['TeamId'] == team_id) & (df_shots_on['MatchId'] == match_id)]
+    result.loc[0, 'team_shotson_for'] = match_shotson_for.shape[0]
+    match_shotson_against = df_shots_on[(df_shots_on['TeamId'] != team_id) & (df_shots_on['MatchId'] == match_id)]
+    result.loc[0, 'team_shotson_against'] = match_shotson_against.shape[0]  
+
+    match_shotsoff_for = df_shots_off[(df_shots_off['TeamId'] == team_id) & (df_shots_off['MatchId'] == match_id)]
+    result.loc[0, 'team_shotsoff_for'] = match_shotsoff_for.shape[0]
+    match_shotsoff_against = df_shots_off[(df_shots_off['TeamId'] != team_id) & (df_shots_off['MatchId'] == match_id)]
+    result.loc[0, 'team_shotsoff_against'] = match_shotsoff_against.shape[0]
+
+    if is_home:
+        match_possession_for = df_possessions[(df_possessions['MatchId'] == match_id)]['HomePossession']
+        result.loc[0, 'team_possession'] = np.mean(match_possession_for)
+    else:
+        match_possession_for = df_possessions[(df_possessions['MatchId'] == match_id)]['AwayPossession']
+        result.loc[0, 'team_possession'] = np.mean(match_possession_for)
     
-    result.loc[0, 'home_team_corners_for'] = corners_for_home
-    result.loc[0, 'home_team_corners_against'] = corners_against_home
-    
-    result.loc[0, 'home_team_shotson_for'] = shotson_for_home
-    result.loc[0, 'home_team_shotson_against'] = shotson_against_home
-    
-    result.loc[0, 'home_team_shotsoff_for'] = shotsoff_for_home
-    result.loc[0, 'home_team_shotsoff_against'] = shotsoff_against_home
-    
-    result.loc[0, 'away_team_goals_for'] = goals_for_away
-    result.loc[0, 'away_team_goals_against'] = goals_against_away
-    
-    result.loc[0, 'away_team_corners_for'] = corners_for_away
-    result.loc[0, 'away_team_corners_against'] = corners_against_away
-    
-    result.loc[0, 'away_team_shotson_for'] = shotson_for_away
-    result.loc[0, 'away_team_shotson_against'] = shotson_against_away
-    
-    result.loc[0, 'away_team_shotsoff_for'] = shotsoff_for_away
-    result.loc[0, 'away_team_shotsoff_against'] = shotsoff_against_away
-#     result.loc[0, 'away_team_goals_difference'] = away_goals - away_goals_conceided
-#     result.loc[0, 'games_won_home_team'] = get_wins(matches_home_team, home_team) 
-#     result.loc[0, 'games_won_away_team'] = get_wins(matches_away_team, away_team)
-#     result.loc[0, 'games_against_won'] = get_wins(last_matches_against, home_team)
-#     result.loc[0, 'games_against_lost'] = get_wins(last_matches_against, away_team)
     return result.iloc[0]
 
-files=[2016,2017,2018]
+def get_match_features(match, x = 10):
+    ''' Create match specific features for a given match. '''
+    home_team_name = get_full_name(match.HomeTeam)
+    away_team_name = get_full_name(match.AwayTeam)
+    print(str(match.Date) + " " + home_team_name + " " + away_team_name)
+    
+    #Get last x matches of home and away team
+    matches_home_team = get_last_matches(match.Date, home_team_name, x = 10)
+    matches_away_team = get_last_matches(match.Date, away_team_name, x = 10)
+    
+    all_data = pd.DataFrame()
+    home_team_data = pd.DataFrame()
+    away_team_data = pd.DataFrame()
+    dummy={}
+    dummy['month']=match.Date.month
+
+    for index, row in matches_home_team.iterrows():
+        match_id = row['ExternalId']
+        is_home = True if row['HomeTeam'] == home_team_name else False
+
+        home_team_id = row['HomeTeamId']
+        away_team_id = row['AwayTeamId']
+        #print(home_team_id + " " + away_team_id)
+
+        home_team_match_data = get_team_features(match_id, home_team_id, is_home)
+        home_team_data = home_team_data.append(home_team_match_data)
+        
+    for index, row in matches_away_team.iterrows():
+        match_id = row['ExternalId']
+        is_home = True if row['HomeTeam'] == away_team_name else False
+
+        home_team_id = row['HomeTeamId']
+        away_team_id = row['AwayTeamId']
+        #print(home_team_id + " " + away_team_id)
+
+        away_team_match_data = get_team_features(match_id, away_team_id, is_home)
+        away_team_data = away_team_data.append(away_team_match_data)
+
+    #print(home_team_data.head())
+    home_team_sum = home_team_data.sum()
+    #print(type(home_team_sum))
+    #home_team_sum = home_team_sum.transpose()
+    away_team_sum = away_team_data.sum()
+    #away_team_sym = away_team_sum.transpose()
+
+    data=[home_team_sum, away_team_sum]
+    data=np.hstack(data)
+    home_away=pd.DataFrame(data)
+    home_away=home_away.transpose()
+    home_away.columns=np.hstack(['home_'+ home_team_data.columns,'away_'+ away_team_data.columns])
+
+    #home_away = pd.concat([home_team_sum, away_team_sum], axis=0)
+    #add wins loses, and direct matches
+    return home_away.iloc[0]
+
+files=[2016, 2017, 2018]
 alldata=[]
 
 for f in files:
@@ -238,11 +202,11 @@ matches_to_predict = pd.read_csv(data_folder + 'to_predict.csv')
 matches_to_predict['Date']=pd.to_datetime(matches_to_predict['Date'])
 matches_to_predict_with_stats = matches_to_predict.apply(lambda x: get_match_features(x, x = 10), axis = 1)
 alldata = []
-alldata.append(pd.concat([matches_to_predict, matches_to_predict_with_stats], axis=1))
+alldata.append(pd.concat([matches_to_predict, matches_to_predict_with_stats], axis=1)[matches_to_predict.columns.tolist() + matches_to_predict_with_stats.columns.tolist()])
 data=pd.concat(alldata,axis=0)
 data['IsTraining'] = False
 
 previous_data = pd.read_csv(data_folder + '/data.csv')
 data = previous_data.append(data)
-data.to_csv(data_folder + '/predict_stats.csv',index=False)
+data.to_csv(data_folder + '/predict_stats_odds_1.csv',index=False)
 

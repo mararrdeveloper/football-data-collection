@@ -107,35 +107,13 @@ def get_match_features(match):
     #Get last x matches of home and away team
     home_team_name = get_full_name(match.HomeTeam)
     matches_home_team = get_last_matches(match.Date, home_team_name, 15)
-    home_team_data = pd.DataFrame()
-    for index, row in matches_home_team.iterrows():
-        match_id = row['ExternalId']
-        is_home = True if row['HomeTeam'] == home_team_name else False
-
-        home_team_id = row['HomeTeamId']
-        away_team_id = row['AwayTeamId']
-        #print(home_team_id + " " + away_team_id)
-
-        home_team_match_data = get_team_features(match_id, home_team_id, is_home)
-        home_team_data = home_team_data.append(home_team_match_data)
-    home_team_sum = home_team_data.sum()
+    home_team_data, home_team_data_sum = process_matches(matches_home_team, home_team_name)
 
     away_team_name = get_full_name(match.AwayTeam)
     matches_away_team = get_last_matches(match.Date, away_team_name, 15)
-    away_team_data = pd.DataFrame()
-    for index, row in matches_away_team.iterrows():
-        match_id = row['ExternalId']
-        is_home = True if row['HomeTeam'] == away_team_name else False
+    away_team_data, away_team_data_sum = process_matches(matches_away_team, away_team_name)
 
-        home_team_id = row['HomeTeamId']
-        away_team_id = row['AwayTeamId']
-        #print(home_team_id + " " + away_team_id)
-
-        away_team_match_data = get_team_features(match_id, away_team_id, is_home)
-        away_team_data = away_team_data.append(away_team_match_data)
-    away_team_sum = away_team_data.sum()
-
-    data=[home_team_sum, away_team_sum]
+    data=[home_team_data_sum, away_team_data_sum]
     data=np.hstack(data)
     home_away=pd.DataFrame(data)
     home_away=home_away.transpose()
@@ -145,6 +123,21 @@ def get_match_features(match):
     #home_away = pd.concat([home_team_sum, away_team_sum], axis=0)
     #add wins loses, and direct matches
     return home_away.iloc[0]
+
+def process_matches(matches, team_name):
+    home_team_data = pd.DataFrame()
+    for index, row in matches.iterrows():
+        match_id = row['ExternalId']
+        is_home = True if row['HomeTeam'] == team_name else False
+
+        home_team_id = row['HomeTeamId']
+        away_team_id = row['AwayTeamId']
+        #print(home_team_id + " " + away_team_id)
+
+        home_team_match_data = get_team_features(match_id, home_team_id, is_home)
+        home_team_data = home_team_data.append(home_team_match_data)
+    home_team_data_sum = home_team_data.sum()
+    return home_team_data, home_team_data_sum
 
 def get_team_features(match_id, team_id, is_home):
     result = pd.DataFrame()
@@ -178,7 +171,7 @@ def get_team_features(match_id, team_id, is_home):
     
     return result.iloc[0]
 
-files=[2016, 2017, 2018]
+files=[2018]
 alldata=[]
 
 for f in files:

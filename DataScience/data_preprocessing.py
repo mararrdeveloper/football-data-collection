@@ -81,6 +81,8 @@ def get_last_matches(date, team, last_n):
     team_matches['ExternalId'] = team_matches['ExternalId'].astype(int)
     #Filter x last matches from team matches
     last_matches = team_matches[team_matches.Date < date].sort_values(by = 'Date', ascending = False).iloc[0:last_n,:]
+    if len(last_matches) == 0:
+        print("No matches for " + team)
     return last_matches
 
 #last_matches = get_last_matches("2018-08-27 15:00:00", "Arsenal", 15)

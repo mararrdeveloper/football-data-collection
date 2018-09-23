@@ -74,10 +74,14 @@ df_teams = pd.read_sql(stmt,conn)
 df_teams.drop_duplicates(['ExternalId'], inplace=True)
 print(df_teams.shape)
 
-def get_last_matches(date, team, last_n):
+def get_last_matches(date, team, last_n, is_home):
     ''' Get the last x matches of a given team. '''
     #Filter team matches from matches
-    team_matches = df_matches[(df_matches['HomeTeam'] == team) | (df_matches['AwayTeam'] == team)].drop_duplicates(['ExternalId'])
+    if is_home:
+        team_matches = df_matches[(df_matches['HomeTeam'] == team)].drop_duplicates(['ExternalId'])
+    else:
+        team_matches = df_matches[(df_matches['AwayTeam'] == team)].drop_duplicates(['ExternalId'])
+        
     team_matches['ExternalId'] = team_matches['ExternalId'].astype(int)
     #Filter x last matches from team matches
     last_matches = team_matches[team_matches.Date < date].sort_values(by = 'Date', ascending = False).iloc[0:last_n,:]
@@ -108,14 +112,14 @@ def get_match_features(match):
 
     #Get last x matches of home and away team
     home_team_name = get_full_name(match.HomeTeam)
-    matches_home_team = get_last_matches(match.Date, home_team_name, 15)
-    home_team_data, home_team_data_sum = process_matches(matches_home_team, home_team_name)
+    matches_home_team = get_last_matches(match.Date, home_team_name, 10, True) 
+    home_team_data = process_matches(matches_home_team, home_team_name)
 
     away_team_name = get_full_name(match.AwayTeam)
-    matches_away_team = get_last_matches(match.Date, away_team_name, 15)
-    away_team_data, away_team_data_sum = process_matches(matches_away_team, away_team_name)
+    matches_away_team = get_last_matches(match.Date, away_team_name, 10, False)
+    away_team_data = process_matches(matches_away_team, away_team_name)
 
-    data=[home_team_data_sum, away_team_data_sum]
+    data=[home_team_data.loc['average'], away_team_data.loc['average']]
     data=np.hstack(data)
     home_away=pd.DataFrame(data)
     home_away=home_away.transpose()
@@ -127,7 +131,7 @@ def get_match_features(match):
     return home_away.iloc[0]
 
 def process_matches(matches, team_name):
-    home_team_data = pd.DataFrame()
+    home_team_data = pd.DataFrame(index=['average'])
     for index, row in matches.iterrows():
         match_id = row['ExternalId']
         is_home = True if row['HomeTeam'] == team_name else False
@@ -138,8 +142,11 @@ def process_matches(matches, team_name):
 
         home_team_match_data = get_team_features(match_id, home_team_id, is_home)
         home_team_data = home_team_data.append(home_team_match_data)
-    home_team_data_sum = home_team_data.sum()
-    return home_team_data, home_team_data_sum
+    
+    if len(home_team_data) > 0:
+        home_team_data.loc['average'] = home_team_data.sum().div(len(matches))
+
+    return home_team_data
 
 def get_team_features(match_id, team_id, is_home):
     result = pd.DataFrame()
@@ -173,7 +180,7 @@ def get_team_features(match_id, team_id, is_home):
     
     return result.iloc[0]
 
-files=[2018]
+files=[2016, 2017, 2018]
 alldata=[]
 
 for f in files:

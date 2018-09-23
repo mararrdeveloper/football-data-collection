@@ -74,17 +74,18 @@ df_teams = pd.read_sql(stmt,conn)
 df_teams.drop_duplicates(['ExternalId'], inplace=True)
 print(df_teams.shape)
 
-def get_last_matches(date, team, x = 10):
+def get_last_matches(date, team, last_n):
     ''' Get the last x matches of a given team. '''
     #Filter team matches from matches
     team_matches = df_matches[(df_matches['HomeTeam'] == team) | (df_matches['AwayTeam'] == team)].drop_duplicates(['ExternalId'])
     team_matches['ExternalId'] = team_matches['ExternalId'].astype(int)
     #Filter x last matches from team matches
-    last_matches = team_matches[team_matches.Date < date].sort_values(by = 'Date', ascending = False).iloc[0:x,:]
+    last_matches = team_matches[team_matches.Date < date].sort_values(by = 'Date', ascending = False).iloc[0:last_n,:]
     return last_matches
 
-last_matches = get_last_matches("2018-08-27 15:00:00", "Arsenal")
-last_matches.head()
+#last_matches = get_last_matches("2018-08-27 15:00:00", "Arsenal", 15)
+#last_matches.head()
+
 def get_full_name(name):
     name_dict = {
         "Man United" : "Manchester United",
@@ -97,6 +98,53 @@ def get_full_name(name):
     if name in name_dict:
         return name_dict[name]
     return name
+
+def get_match_features(match):
+    ''' Create match specific features for a given match. '''
+
+    all_data = pd.DataFrame()
+
+    #Get last x matches of home and away team
+    home_team_name = get_full_name(match.HomeTeam)
+    matches_home_team = get_last_matches(match.Date, home_team_name, 15)
+    home_team_data = pd.DataFrame()
+    for index, row in matches_home_team.iterrows():
+        match_id = row['ExternalId']
+        is_home = True if row['HomeTeam'] == home_team_name else False
+
+        home_team_id = row['HomeTeamId']
+        away_team_id = row['AwayTeamId']
+        #print(home_team_id + " " + away_team_id)
+
+        home_team_match_data = get_team_features(match_id, home_team_id, is_home)
+        home_team_data = home_team_data.append(home_team_match_data)
+    home_team_sum = home_team_data.sum()
+
+    away_team_name = get_full_name(match.AwayTeam)
+    matches_away_team = get_last_matches(match.Date, away_team_name, 15)
+    away_team_data = pd.DataFrame()
+    for index, row in matches_away_team.iterrows():
+        match_id = row['ExternalId']
+        is_home = True if row['HomeTeam'] == away_team_name else False
+
+        home_team_id = row['HomeTeamId']
+        away_team_id = row['AwayTeamId']
+        #print(home_team_id + " " + away_team_id)
+
+        away_team_match_data = get_team_features(match_id, away_team_id, is_home)
+        away_team_data = away_team_data.append(away_team_match_data)
+    away_team_sum = away_team_data.sum()
+
+    data=[home_team_sum, away_team_sum]
+    data=np.hstack(data)
+    home_away=pd.DataFrame(data)
+    home_away=home_away.transpose()
+    home_away.columns=np.hstack(['home_'+ home_team_data.columns,'away_'+ away_team_data.columns])
+    
+    print(str(match.Date) + " " + home_team_name + " " + away_team_name)
+    #home_away = pd.concat([home_team_sum, away_team_sum], axis=0)
+    #add wins loses, and direct matches
+    return home_away.iloc[0]
 
 def get_team_features(match_id, team_id, is_home):
     result = pd.DataFrame()
@@ -130,68 +178,13 @@ def get_team_features(match_id, team_id, is_home):
     
     return result.iloc[0]
 
-def get_match_features(match, x = 10):
-    ''' Create match specific features for a given match. '''
-    home_team_name = get_full_name(match.HomeTeam)
-    away_team_name = get_full_name(match.AwayTeam)
-    print(str(match.Date) + " " + home_team_name + " " + away_team_name)
-    
-    #Get last x matches of home and away team
-    matches_home_team = get_last_matches(match.Date, home_team_name, x = 10)
-    matches_away_team = get_last_matches(match.Date, away_team_name, x = 10)
-    
-    all_data = pd.DataFrame()
-    home_team_data = pd.DataFrame()
-    away_team_data = pd.DataFrame()
-    dummy={}
-    dummy['month']=match.Date.month
-
-    for index, row in matches_home_team.iterrows():
-        match_id = row['ExternalId']
-        is_home = True if row['HomeTeam'] == home_team_name else False
-
-        home_team_id = row['HomeTeamId']
-        away_team_id = row['AwayTeamId']
-        #print(home_team_id + " " + away_team_id)
-
-        home_team_match_data = get_team_features(match_id, home_team_id, is_home)
-        home_team_data = home_team_data.append(home_team_match_data)
-        
-    for index, row in matches_away_team.iterrows():
-        match_id = row['ExternalId']
-        is_home = True if row['HomeTeam'] == away_team_name else False
-
-        home_team_id = row['HomeTeamId']
-        away_team_id = row['AwayTeamId']
-        #print(home_team_id + " " + away_team_id)
-
-        away_team_match_data = get_team_features(match_id, away_team_id, is_home)
-        away_team_data = away_team_data.append(away_team_match_data)
-
-    #print(home_team_data.head())
-    home_team_sum = home_team_data.sum()
-    #print(type(home_team_sum))
-    #home_team_sum = home_team_sum.transpose()
-    away_team_sum = away_team_data.sum()
-    #away_team_sym = away_team_sum.transpose()
-
-    data=[home_team_sum, away_team_sum]
-    data=np.hstack(data)
-    home_away=pd.DataFrame(data)
-    home_away=home_away.transpose()
-    home_away.columns=np.hstack(['home_'+ home_team_data.columns,'away_'+ away_team_data.columns])
-
-    #home_away = pd.concat([home_team_sum, away_team_sum], axis=0)
-    #add wins loses, and direct matches
-    return home_away.iloc[0]
-
 files=[2016, 2017, 2018]
 alldata=[]
 
 for f in files:
     matches_with_odds = pd.read_csv(data_folder + str(f)+'.csv')
     matches_with_odds['Date']=pd.to_datetime(matches_with_odds['Date'])
-    match_stats = matches_with_odds.apply(lambda x: get_match_features(x, x = 10), axis = 1)
+    match_stats = matches_with_odds.apply(lambda x: get_match_features(x), axis = 1)
     alldata.append(pd.concat([matches_with_odds, match_stats], axis=1))
 
 data=pd.concat(alldata,axis=0)
@@ -200,7 +193,7 @@ data.to_csv(data_folder + '/data.csv',index=False)
 
 matches_to_predict = pd.read_csv(data_folder + 'to_predict.csv')
 matches_to_predict['Date']=pd.to_datetime(matches_to_predict['Date'])
-matches_to_predict_with_stats = matches_to_predict.apply(lambda x: get_match_features(x, x = 10), axis = 1)
+matches_to_predict_with_stats = matches_to_predict.apply(lambda x: get_match_features(x), axis = 1)
 alldata = []
 alldata.append(pd.concat([matches_to_predict, matches_to_predict_with_stats], axis=1)[matches_to_predict.columns.tolist() + matches_to_predict_with_stats.columns.tolist()])
 data=pd.concat(alldata,axis=0)

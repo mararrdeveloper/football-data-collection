@@ -107,30 +107,38 @@ def get_full_name(name):
 
 def get_match_features(match):
     ''' Create match specific features for a given match. '''
-
     all_data = pd.DataFrame()
-
     #Get last x matches of home and away team
     home_team_name = get_full_name(match.HomeTeam)
-    matches_home_team = get_last_matches(match.Date, home_team_name, 10, True) 
-    home_team_data = process_matches(matches_home_team, home_team_name)
-
     away_team_name = get_full_name(match.AwayTeam)
-    matches_away_team = get_last_matches(match.Date, away_team_name, 10, False)
-    away_team_data = process_matches(matches_away_team, away_team_name)
 
-    data=[home_team_data.loc['average'], away_team_data.loc['average']]
+    matches_home_team_home = get_last_matches(match.Date, home_team_name, 15, True) 
+    home_team_home = process_matches_average(matches_home_team_home, home_team_name)
+
+    matches_home_team_away = get_last_matches(match.Date, home_team_name, 15, False) 
+    home_team_away = process_matches_average(matches_home_team_away, home_team_name)
+   
+    matches_away_team_home = get_last_matches(match.Date, away_team_name, 15, True)
+    away_team_home = process_matches_average(matches_away_team_home, away_team_name)
+
+    matches_away_team_away = get_last_matches(match.Date, away_team_name, 15, False)
+    away_team_away = process_matches_average(matches_away_team_away, away_team_name)
+
+    data=[home_team_home.loc['average'], home_team_away.loc['average'], away_team_home.loc['average'], away_team_away.loc['average']]
+    
     data=np.hstack(data)
     home_away=pd.DataFrame(data)
     home_away=home_away.transpose()
-    home_away.columns=np.hstack(['home_'+ home_team_data.columns,'away_'+ away_team_data.columns])
+    home_away.columns=np.hstack([
+        'home_home_'+ home_team_home.columns,
+        'home_away_'+ home_team_away.columns,
+        'away_home_'+ away_team_home.columns,
+        'away_away_'+ away_team_away.columns])
     
     print(str(match.Date) + " " + home_team_name + " " + away_team_name)
-    #home_away = pd.concat([home_team_sum, away_team_sum], axis=0)
-    #add wins loses, and direct matches
     return home_away.iloc[0]
 
-def process_matches(matches, team_name):
+def process_matches_average(matches, team_name):
     home_team_data = pd.DataFrame(index=['average'])
     for index, row in matches.iterrows():
         match_id = row['ExternalId']

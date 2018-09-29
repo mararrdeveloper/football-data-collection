@@ -74,7 +74,11 @@ df_teams = pd.read_sql(stmt,conn)
 df_teams.drop_duplicates(['ExternalId'], inplace=True)
 print(df_teams.shape)
 
-def get_last_matches(date, team, last_n, is_home):
+def get_last_n_matches(team_matches, date, last_n):
+    last_matches = team_matches[team_matches.Date <= date].sort_values(by = 'Date', ascending = False).iloc[0:last_n,:] 
+    return last_matches
+
+def get_matches_team(date, team, last_n, is_home):
     ''' Get the last x matches of a given team. '''
     #Filter team matches from matches
     if is_home:
@@ -83,16 +87,28 @@ def get_last_matches(date, team, last_n, is_home):
         team_matches = df_matches[(df_matches['AwayTeam'] == team)].drop_duplicates(['ExternalId'])
         
     team_matches['ExternalId'] = team_matches['ExternalId'].astype(int)
-    #Filter x last matches from team matches
-    last_matches = team_matches[team_matches.Date < date].sort_values(by = 'Date', ascending = False).iloc[0:last_n,:]
+    last_matches = get_last_n_matches(team_matches, date, last_n)
+
     if len(last_matches) == 0:
         print("No matches for " + team)
     return last_matches
 
+def get_last_direct_matches(date, team_home, team_away, last_n):
+    direct_matches = df_matches[((df_matches['HomeTeam'] == team_home) & (df_matches['AwayTeam'] == team_away)) |
+        (df_matches['HomeTeam'] == team_away) & (df_matches['AwayTeam'] == team_home)]
+
+    direct_matches['ExternalId'] = direct_matches['ExternalId'].astype(int)
+    last_matches = get_last_n_matches(direct_matches, date, last_n)
+    
+    if len(last_matches) == 0:
+        print("No direct matches for " + team_home + " " +team_away)
+    return last_matches
 #last_matches = get_last_matches("2018-08-27 15:00:00", "Arsenal", 15)
 #last_matches.head()
 
+
 def get_full_name(name):
+    #missmapics of the 2 databases
     name_dict = {
         "Man United" : "Manchester United",
         "Man City" : "Manchester City",
@@ -112,28 +128,34 @@ def get_match_features(match):
     home_team_name = get_full_name(match.HomeTeam)
     away_team_name = get_full_name(match.AwayTeam)
 
-    matches_home_team_home = get_last_matches(match.Date, home_team_name, 15, True) 
+    matches_home_team_home = get_matches_team(match.Date, home_team_name, 15, True) 
     home_team_home = process_matches_average(matches_home_team_home, home_team_name)
 
-    matches_home_team_away = get_last_matches(match.Date, home_team_name, 15, False) 
-    home_team_away = process_matches_average(matches_home_team_away, home_team_name)
+    #matches_home_team_away = get_matches_team(match.Date, home_team_name, 15, False) 
+    #home_team_away = process_matches_average(matches_home_team_away, home_team_name)
    
-    matches_away_team_home = get_last_matches(match.Date, away_team_name, 15, True)
-    away_team_home = process_matches_average(matches_away_team_home, away_team_name)
+    #matches_away_team_home = get_matches_team(match.Date, away_team_name, 15, True)
+    #away_team_home = process_matches_average(matches_away_team_home, away_team_name)
 
-    matches_away_team_away = get_last_matches(match.Date, away_team_name, 15, False)
+    matches_away_team_away = get_matches_team(match.Date, away_team_name, 15, False)
     away_team_away = process_matches_average(matches_away_team_away, away_team_name)
 
-    data=[home_team_home.loc['average'], home_team_away.loc['average'], away_team_home.loc['average'], away_team_away.loc['average']]
+    direct_matches = get_last_direct_matches(match.Date, home_team_name, away_team_name, 15)
+    
+    home_team_direct = process_matches_average(direct_matches, home_team_name)
+    away_team_direct = process_matches_average(direct_matches, away_team_name)
+
+    data=[home_team_home.loc['average'], home_team_direct.loc['average'], away_team_away.loc['average'], away_team_direct.loc['average']]
     
     data=np.hstack(data)
     home_away=pd.DataFrame(data)
     home_away=home_away.transpose()
     home_away.columns=np.hstack([
         'home_home_'+ home_team_home.columns,
-        'home_away_'+ home_team_away.columns,
-        'away_home_'+ away_team_home.columns,
-        'away_away_'+ away_team_away.columns])
+        'home_away_'+ home_team_direct.columns,
+        'away_away_'+ away_team_away.columns,
+        'away_home_'+ away_team_direct.columns
+        ])
     
     print(str(match.Date) + " " + home_team_name + " " + away_team_name)
     return home_away.iloc[0]

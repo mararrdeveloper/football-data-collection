@@ -165,8 +165,8 @@ def print_results(res):
         print("accuracy: {0},\nprecission: {1},\n recall:   {2}, \n confusion:".format(str(item[1]), str(item[2]), str(item[3])))
         print(item[4])
 
-def run_clf(clf, columns):
-    X, target = load_data(is_training=False, columns_to_keep=columns)
+def run_clf(clf, drop_columns):
+    X, target = load_data(is_training=False, columns_to_drop=drop_columns)
     #print(X)
     print(X.shape)
     #print(X)

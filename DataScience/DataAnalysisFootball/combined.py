@@ -14,7 +14,6 @@ keep_columns =  ['IsTraining','FTR', 'Div', 'Date', 'HomeTeam', 'AwayTeam', 'B36
         'home_direct_team_shotsoff_for',	'home_direct_team_shotson_against',	'home_direct_team_shotson_for',	
         'home_home_team_corners_against',	'home_home_team_corners_for',	'home_home_team_goals_against',	'home_home_team_goals_for',	
         'home_home_team_possession',	'home_home_team_shotsoff_against',	'home_home_team_shotsoff_for',	'home_home_team_shotson_against', 'home_home_team_shotson_for'
-
 ]
 
 drop_columns = [
@@ -23,6 +22,7 @@ drop_columns = [
     'HTAG', 'HTHG', 'HTR', 'HY', 'IWA', 'IWD', 'IWH', 'LBA', 'LBD', 'LBH', 'PSA', 'PSCA', 'PSCD', 'PSCH', 'PSD', 'PSH', 'Referee', 
     'VCA', 'VCD', 'VCH', 'WHA', 'WHD', 'WHH'
 ]
+
 X,target = load_data(columns_to_drop=drop_columns, is_training=True)
 print(X.shape)
 res=test_clfs(clfs=helpers.clfs,X=X,target=target,cv=10)
@@ -34,5 +34,6 @@ print()
 
 clf_key = list(res.keys())[0]
 clf = res[clf_key][5]
-prediction = run_clf(clf, drop_columns)
+dm = res[clf_key][6]
+prediction = run_clf(clf, dm, drop_columns)
 print(prediction)

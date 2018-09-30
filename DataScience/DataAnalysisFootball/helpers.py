@@ -8,8 +8,7 @@ from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier, AdaBo
 from sklearn.naive_bayes import GaussianNB
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 from sklearn.decomposition import PCA
-from sklearn.model_selection import cross_val_score
-from sklearn.cross_validation import train_test_split
+from sklearn.model_selection import cross_val_score, train_test_split
 from sklearn.metrics import accuracy_score, precision_score, recall_score, confusion_matrix
 from collections import defaultdict
 import matplotlib.pyplot as plt

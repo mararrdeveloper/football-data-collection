@@ -140,7 +140,7 @@ def get_match_features(match):
     matches_away_team_away = get_matches_team(match.Date, away_team_name, 15, False)
     away_team_away = process_matches_average(matches_away_team_away, away_team_name)
 
-    direct_matches = get_last_direct_matches(match.Date, home_team_name, away_team_name, 15)
+    direct_matches = get_last_direct_matches(match.Date, home_team_name, away_team_name, 6)
     
     home_team_direct = process_matches_average(direct_matches, home_team_name)
     away_team_direct = process_matches_average(direct_matches, away_team_name)
@@ -152,9 +152,9 @@ def get_match_features(match):
     home_away=home_away.transpose()
     home_away.columns=np.hstack([
         'home_home_'+ home_team_home.columns,
-        'home_away_'+ home_team_direct.columns,
+        'home_direct_'+ home_team_direct.columns,
         'away_away_'+ away_team_away.columns,
-        'away_home_'+ away_team_direct.columns
+        'away_direct_'+ away_team_direct.columns
         ])
     
     print(str(match.Date) + " " + home_team_name + " " + away_team_name)

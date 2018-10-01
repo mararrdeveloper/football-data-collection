@@ -61,9 +61,6 @@ def test_clfs(clfs,X,target,cv=10,scoring="accuracy"):
         # X = StandardScaler().fit_transform(X)
         # pca = PCA(n_components=12)
         # X = pca.fit_transform(X, y=target)
-
-        #X_train, X_test, target_train, target_test = train_test_split(X, target, test_size=0.20)
-        #clf_fit = clf.fit(X_train, target_train)
         scorer = make_scorer(accuracy_score)
 
         X_train_calibrate, X_test, y_train_calibrate, y_test = train_test_split(X, target, test_size=0.20)
@@ -77,25 +74,15 @@ def test_clfs(clfs,X,target,cv=10,scoring="accuracy"):
                     X_calibrate = X_calibrate, y_calibrate = y_calibrate,
                     X_test = X_test, y_test = y_test, cv_sets = cv_sets,
                     params = parameters_GNB, scorer = scorer, jobs = 1, use_grid_search = True)
-
         
-        
-        from sklearn import preprocessing
-        lb = preprocessing.LabelBinarizer()
+        #from sklearn import preprocessing
+        #lb = preprocessing.LabelBinarizer()
 
-          # PCA
-        #X_test = StandardScaler().fit_transform(X_test)
-        #pca = PCA(n_components = 5)
-        #X_test = pca.fit_transform(X_test, y=y_test)
-        #target = lb.fit(y_test)
         clf_fit = clf.fit(dm_reduce.transform(X_train), y_train)
-        #y_test = y_test.apply(pd.to_numeric, errors='coerce')
         prediction = clf.predict(dm_reduce.transform(X_test))
-        #print(prediction)
         accuracy = accuracy_score(y_test, prediction)
         precision = precision_score(y_test, prediction, average=None)
         recall = recall_score(y_test, prediction, average=None)
-      
         confusion = confusion_matrix(y_test, prediction)  # 
         #plt.imshow(confusion, cmap='binary', interpolation='None')
         #plt.show()

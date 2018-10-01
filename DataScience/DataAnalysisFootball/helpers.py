@@ -43,67 +43,6 @@ def getScores(estimator, x, y):
             precision_score(y, yPred, pos_label=3, average='macro'), 
             recall_score(y, yPred, pos_label=3, average='macro'))
 
-def test_clfs(clfs,X,target,cv=10,scoring="accuracy"):
-    res = defaultdict(list)
-    feature_len = X.shape[1]
-    parameters_GNB = {'dm_reduce__n_components': np.arange(5, feature_len, int(np.around(feature_len/5)))}
-
-    for clf in clfs:
-        
-        #Initializing dimensionality reductions
-        pca = PCA()
-        dm_reductions = [pca]  
-
-        print("testing : "+str(clf))
-        scores = cross_val_score(clf, X, target, cv=cv,scoring=scoring)
-        print(scores)
-        # PCA
-        # X = StandardScaler().fit_transform(X)
-        # pca = PCA(n_components=12)
-        # X = pca.fit_transform(X, y=target)
-        scorer = make_scorer(accuracy_score)
-
-        X_train_calibrate, X_test, y_train_calibrate, y_test = train_test_split(X, target, test_size=0.20)
-        X_train, X_calibrate, y_train, y_calibrate = train_test_split(X_train_calibrate, y_train_calibrate, test_size = 0.3, random_state = 42)
-
-        #Creating cross validation data splits
-        cv_sets = model_selection.StratifiedShuffleSplit(n_splits = 5, test_size = 0.20, random_state = 5)
-        cv_sets.get_n_splits(X_train, y_train)
-
-        clf, dm_reduce, train_score, test_score = train_calibrate_predict(clf = clf, dm_reduction = pca, X_train = X_train, y_train = y_train,
-                    X_calibrate = X_calibrate, y_calibrate = y_calibrate,
-                    X_test = X_test, y_test = y_test, cv_sets = cv_sets,
-                    params = parameters_GNB, scorer = scorer, jobs = 1, use_grid_search = True)
-        
-        #from sklearn import preprocessing
-        #lb = preprocessing.LabelBinarizer()
-
-        clf_fit = clf.fit(dm_reduce.transform(X_train), y_train)
-        prediction = clf.predict(dm_reduce.transform(X_test))
-        accuracy = accuracy_score(y_test, prediction)
-        precision = precision_score(y_test, prediction, average=None)
-        recall = recall_score(y_test, prediction, average=None)
-        confusion = confusion_matrix(y_test, prediction)  # 
-        #plt.imshow(confusion, cmap='binary', interpolation='None')
-        #plt.show()
-
-        res[clf_fit].append(scores)
-        res[clf_fit].append(accuracy)
-        res[clf_fit].append(precision)
-        res[clf_fit].append(recall)
-        res[clf_fit].append(confusion)
-        res[clf_fit].append(clf)
-        res[clf_fit].append(dm_reduce)
-        #print(accuracy)
-        #print(precision)
-        #print(recall)
-        #print(confusion)
-        #y_predict_test = clf.predict(X_test)
-        #F1_score
-        #score_test = metrics.f1_score(y_test, y_predict_test, pos_label=list(set(y_test)), average = None)
-    return res
-
-
 def load_data(columns_to_keep=None,columns_to_drop=None,scaler=StandardScaler(),target_name="FTR", is_training=True):
     df =_data_load_helper()
 
@@ -194,6 +133,67 @@ def run_clf(clf, dm, drop_columns):
     #print(X)
     prediction = clf.predict(dm.transform(X))
     return prediction
+
+def calibrate_train_clfs(clfs,X,target,cv=10,scoring="accuracy"):
+    res = defaultdict(list)
+    feature_len = X.shape[1]
+    parameters_GNB = {'dm_reduce__n_components': np.arange(5, feature_len, int(np.around(feature_len/5)))}
+
+    for clf in clfs:
+        
+        #Initializing dimensionality reductions
+        pca = PCA()
+        dm_reductions = [pca]  
+
+        print("testing : "+str(clf))
+        scores = cross_val_score(clf, X, target, cv=cv,scoring=scoring)
+        print(scores)
+        # PCA
+        # X = StandardScaler().fit_transform(X)
+        # pca = PCA(n_components=12)
+        # X = pca.fit_transform(X, y=target)
+        scorer = make_scorer(accuracy_score)
+
+        X_train_calibrate, X_test, y_train_calibrate, y_test = train_test_split(X, target, test_size=0.20)
+        X_train, X_calibrate, y_train, y_calibrate = train_test_split(X_train_calibrate, y_train_calibrate, test_size = 0.3, random_state = 42)
+
+        #Creating cross validation data splits
+        cv_sets = model_selection.StratifiedShuffleSplit(n_splits = 5, test_size = 0.20, random_state = 5)
+        cv_sets.get_n_splits(X_train, y_train)
+
+        clf, dm_reduce, train_score, test_score = train_calibrate_predict(clf = clf, dm_reduction = pca, X_train = X_train, y_train = y_train,
+                    X_calibrate = X_calibrate, y_calibrate = y_calibrate,
+                    X_test = X_test, y_test = y_test, cv_sets = cv_sets,
+                    params = parameters_GNB, scorer = scorer, jobs = 1, use_grid_search = True)
+        
+        #from sklearn import preprocessing
+        #lb = preprocessing.LabelBinarizer()
+
+        clf_fit = clf.fit(dm_reduce.transform(X_train), y_train)
+        prediction = clf.predict(dm_reduce.transform(X_test))
+        accuracy = accuracy_score(y_test, prediction)
+        precision = precision_score(y_test, prediction, average=None)
+        recall = recall_score(y_test, prediction, average=None)
+        confusion = confusion_matrix(y_test, prediction)  # 
+        #plt.imshow(confusion, cmap='binary', interpolation='None')
+        #plt.show()
+
+        res[clf_fit].append(scores)
+        res[clf_fit].append(accuracy)
+        res[clf_fit].append(precision)
+        res[clf_fit].append(recall)
+        res[clf_fit].append(confusion)
+        res[clf_fit].append(clf)
+        res[clf_fit].append(dm_reduce)
+        #print(accuracy)
+        #print(precision)
+        #print(recall)
+        #print(confusion)
+        #y_predict_test = clf.predict(X_test)
+        #F1_score
+        #score_test = metrics.f1_score(y_test, y_predict_test, pos_label=list(set(y_test)), average = None)
+    return res
+
 
 def train_calibrate_predict(clf, dm_reduction, X_train, y_train, X_calibrate, y_calibrate, X_test, y_test, cv_sets, params, scorer, jobs, 
                             use_grid_search = True, **kwargs):

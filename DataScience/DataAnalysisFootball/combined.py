@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import helpers
-from helpers import test_clfs, load_data, get_baseline, print_results, run_clf
+from helpers import calibrate_train_clfs, load_data, get_baseline, print_results, run_clf
 
 #X,target=load_data(columns_to_drop=['FTHG', 'FTAG',	'HTHG',	'HTAG',	'HTR'])
 keep_columns =  ['IsTraining','FTR', 'Div', 'Date', 'HomeTeam', 'AwayTeam', 'B365H', 'B365D', 'B365A',
@@ -25,7 +25,7 @@ drop_columns = [
 
 X,target = load_data(columns_to_drop=drop_columns, is_training=True)
 print(X.shape)
-res=test_clfs(clfs=helpers.clfs,X=X,target=target,cv=10)
+res=calibrate_train_clfs(clfs=helpers.clfs,X=X,target=target,cv=10)
 
 get_baseline()
 print_results(res)

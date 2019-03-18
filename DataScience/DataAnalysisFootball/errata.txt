@@ -1,1 +1,0 @@
-The print_results function is displaying mean and var in the text, but what is really being calculated is the standard deviation, not the variance. This is fixed in the code.

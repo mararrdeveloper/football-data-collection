@@ -4,8 +4,11 @@ import pandas as pd
 import pyodbc
 import numpy as np
 from random import random
+import football_helpers as football
 
-data_folder = 'DataAnalysisFootball/data/'
+data_folder = 'data/'
+#season_years=[2016, 2017, 2018]
+season_years=[2018]
 
 conn = pyodbc.connect("Driver={SQL Server Native Client 11.0};"
                      "Server=Martin-PC\SQLEXPRESS;"
@@ -74,9 +77,29 @@ df_teams = pd.read_sql(stmt,conn)
 df_teams.drop_duplicates(['ExternalId'], inplace=True)
 print(df_teams.shape)
 
-def get_last_n_matches(team_matches, date, last_n):
-    last_matches = team_matches[team_matches.Date <= date].sort_values(by = 'Date', ascending = False).iloc[0:last_n,:] 
-    return last_matches
+def preprocess():
+    alldata=[]
+    for f in season_years:
+        matches_with_odds = pd.read_csv(data_folder + str(f)+'.csv')
+        matches_with_odds['Date']=pd.to_datetime(matches_with_odds['Date'])
+        match_stats = matches_with_odds.apply(lambda x: get_match_features(x), axis = 1)
+        alldata.append(pd.concat([matches_with_odds, match_stats], axis=1))
+
+    data=pd.concat(alldata,axis=0)
+    data['IsTraining'] = True
+    data.to_csv(data_folder + '/data.csv',index=False)
+
+    matches_to_predict = pd.read_csv(data_folder + 'to_predict.csv')
+    matches_to_predict['Date']=pd.to_datetime(matches_to_predict['Date'])
+    matches_to_predict_with_stats = matches_to_predict.apply(lambda x: get_match_features(x), axis = 1)
+    alldata = []
+    alldata.append(pd.concat([matches_to_predict, matches_to_predict_with_stats], axis=1)[matches_to_predict.columns.tolist() + matches_to_predict_with_stats.columns.tolist()])
+    data=pd.concat(alldata,axis=0)
+    data['IsTraining'] = False
+
+    previous_data = pd.read_csv(data_folder + '/data.csv')
+    data = previous_data.append(data)
+    data.to_csv(data_folder + 'processed/features.csv',index=False)
 
 def get_matches_team(date, team, last_n, is_home):
     ''' Get the last x matches of a given team. '''
@@ -93,6 +116,12 @@ def get_matches_team(date, team, last_n, is_home):
         print("No matches for " + team)
     return last_matches
 
+def get_last_n_matches(team_matches, date, last_n):
+    last_matches = team_matches[team_matches.Date <= date].sort_values(by = 'Date', ascending = False).iloc[0:last_n,:] 
+    return last_matches
+
+#last_matches = get_last_matches("2018-08-27 15:00:00", "Arsenal", 15)
+#last_matches.head()
 def get_last_direct_matches(date, team_home, team_away, last_n):
     direct_matches = df_matches[((df_matches['HomeTeam'] == team_home) & (df_matches['AwayTeam'] == team_away)) |
         (df_matches['HomeTeam'] == team_away) & (df_matches['AwayTeam'] == team_home)]
@@ -103,30 +132,13 @@ def get_last_direct_matches(date, team_home, team_away, last_n):
     if len(last_matches) == 0:
         print("No direct matches for " + team_home + " " +team_away)
     return last_matches
-#last_matches = get_last_matches("2018-08-27 15:00:00", "Arsenal", 15)
-#last_matches.head()
-
-
-def get_full_name(name):
-    #missmapics of the 2 databases
-    name_dict = {
-        "Man United" : "Manchester United",
-        "Man City" : "Manchester City",
-        "Wolves" : "Wolverhampton Wanderers",
-        "Newcastle" : "Newcastle United",
-        "West Brom" : "West Bromwich Albion",
-        "QPR" : "Queens Park Rangers",
-    }
-    if name in name_dict:
-        return name_dict[name]
-    return name
 
 def get_match_features(match):
     ''' Create match specific features for a given match. '''
     all_data = pd.DataFrame()
     #Get last x matches of home and away team
-    home_team_name = get_full_name(match.HomeTeam)
-    away_team_name = get_full_name(match.AwayTeam)
+    home_team_name = football.get_full_name(match.HomeTeam)
+    away_team_name = football.get_full_name(match.AwayTeam)
 
     matches_home_team_home = get_matches_team(match.Date, home_team_name, 15, True) 
     home_team_home = process_matches_average(matches_home_team_home, home_team_name)
@@ -210,28 +222,4 @@ def get_team_features(match_id, team_id, is_home):
     
     return result.iloc[0]
 
-files=[2016, 2017, 2018]
-alldata=[]
-
-for f in files:
-    matches_with_odds = pd.read_csv(data_folder + str(f)+'.csv')
-    matches_with_odds['Date']=pd.to_datetime(matches_with_odds['Date'])
-    match_stats = matches_with_odds.apply(lambda x: get_match_features(x), axis = 1)
-    alldata.append(pd.concat([matches_with_odds, match_stats], axis=1))
-
-data=pd.concat(alldata,axis=0)
-data['IsTraining'] = True
-data.to_csv(data_folder + '/data.csv',index=False)
-
-matches_to_predict = pd.read_csv(data_folder + 'to_predict.csv')
-matches_to_predict['Date']=pd.to_datetime(matches_to_predict['Date'])
-matches_to_predict_with_stats = matches_to_predict.apply(lambda x: get_match_features(x), axis = 1)
-alldata = []
-alldata.append(pd.concat([matches_to_predict, matches_to_predict_with_stats], axis=1)[matches_to_predict.columns.tolist() + matches_to_predict_with_stats.columns.tolist()])
-data=pd.concat(alldata,axis=0)
-data['IsTraining'] = False
-
-previous_data = pd.read_csv(data_folder + '/data.csv')
-data = previous_data.append(data)
-data.to_csv(data_folder + '/predict_stats_odds_1.csv',index=False)
-
+preprocess()

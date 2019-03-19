@@ -13,13 +13,14 @@ keep_columns =  ['IsTraining','FTR', 'Div', 'Date', 'HomeTeam', 'AwayTeam',
         'home_direct_team_goals_against',	'home_direct_team_goals_for',	'home_direct_team_possession',	'home_direct_team_shotsoff_against',
         'home_direct_team_shotsoff_for',	'home_direct_team_shotson_against',	'home_direct_team_shotson_for',	
         'home_home_team_corners_against',	'home_home_team_corners_for',	'home_home_team_goals_against',	'home_home_team_goals_for',	
-        'home_home_team_possession',	'home_home_team_shotsoff_against',	'home_home_team_shotsoff_for',	'home_home_team_shotson_against', 'home_home_team_shotson_for'
+        'home_home_team_possession',	'home_home_team_shotsoff_against',	'home_home_team_shotsoff_for',	'home_home_team_shotson_against', 'home_home_team_shotson_for',
+        'Referee'
 ]
 
-drop_columns = ['B365H', 'B365D', 'B365A',
-    'AC', 'AF', 'AR', 'AS', 'AST', 'AY', 'BWA', 'BWD', 'BWH', 'Bb1X2', 'BbAH', 'BbAHh', 'BbAv<2.5', 'BbAv>2.5', 'BbAvA', 'BbAvAHA', 
-    'BbAvAHH', 'BbAvD', 'BbAvH', 'BbMx<2.5', 'BbMx>2.5', 'BbMxA', 'BbMxAHA', 'BbMxAHH', 'BbMxD', 'BbMxH', 'BbOU', 'FTAG', 'FTHG', 'HC', 'HF', 'HR', 'HS', 'HST', 
-    'HTAG', 'HTHG', 'HTR', 'HY', 'IWA', 'IWD', 'IWH', 'LBA', 'LBD', 'LBH', 'PSA', 'PSCA', 'PSCD', 'PSCH', 'PSD', 'PSH', 'Referee', 
+drop_columns = [
+    'B365H', 'B365D', 'B365A','AC', 'AF', 'AR', 'AS', 'AST', 'AY', 'BWA', 'BWD', 'BWH', 'Bb1X2', 'BbAH', 'BbAHh', 'BbAv<2.5', 'BbAv>2.5', 'BbAvA', 'BbAvAHA', 
+    'BbAvAHH', 'BbAvD', 'BbAvH', 'BbMx<2.5', 'BbMx>2.5', 'BbMxA', 'BbMxAHA', 'BbMxAHH', 'BbMxD', 'BbMxH', 'BbOU', 
+    'FTAG', 'FTHG', 'HC', 'HF', 'HR', 'HS', 'HST', 'HTAG', 'HTHG', 'HTR', 'HY', 'IWA', 'IWD', 'IWH', 'LBA', 'LBD', 'LBH', 'PSA', 'PSCA', 'PSCD', 'PSCH', 'PSD', 'PSH', 
     'VCA', 'VCD', 'VCH', 'WHA', 'WHD', 'WHH'
 ]
 

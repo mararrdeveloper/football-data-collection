@@ -10,10 +10,9 @@ from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier, AdaBo
 from sklearn.naive_bayes import GaussianNB
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 from sklearn.decomposition import PCA
-from sklearn.model_selection import cross_val_score, train_test_split
+from sklearn.model_selection import cross_val_score, train_test_split, KFold, TimeSeriesSplit
 from sklearn.metrics import accuracy_score, precision_score, recall_score, confusion_matrix, make_scorer
 from sklearn.pipeline import Pipeline
-
 from collections import defaultdict
 
 import matplotlib.pyplot as plt
@@ -45,10 +44,10 @@ def getScores(estimator, x, y):
 
 def load_data(columns_to_keep=None,columns_to_drop=None,scaler=StandardScaler(),target_name="FTR", is_training=True):
     df =_data_load_helper()
-
     return _preprocess_data(df,columns_to_keep,columns_to_drop,scaler,target_name, is_training)
-    
-def _data_load_helper(data_path = "data/predict_stats_odds_1.csv"):
+   
+def _data_load_helper(data_path = "data/processed/features_1.csv"):
+    #data/processed/predict_stats_odds_0000.csv
     df = pd.read_csv(data_path)
 
     df = df.fillna(0)
@@ -67,9 +66,7 @@ def _preprocess_data(df,columns_to_keep=None,columns_to_drop=None,scaler=Standar
         df=df[columns_to_keep]
         print(df.shape)
     elif columns_to_drop!=None:
-        
         df=df.drop(labels=columns_to_drop,axis=1)
-    
     
     if is_training:
         targets = df[df['IsTraining'] == True]
@@ -78,7 +75,7 @@ def _preprocess_data(df,columns_to_keep=None,columns_to_drop=None,scaler=Standar
 
     target=targets[target_name]
     length = len(target)
-
+    df.to_csv('data/processed/features_scaled.csv')
     df=df.drop(target_name,axis=1)
     df=df.drop("IsTraining",axis=1)
     #print(df.columns)        
@@ -140,22 +137,22 @@ def calibrate_train_clfs(clfs,X,target,cv=10,scoring="accuracy"):
     parameters_GNB = {'dm_reduce__n_components': np.arange(5, feature_len, int(np.around(feature_len/5)))}
 
     for clf in clfs:
-        
-        #Initializing dimensionality reductions
-        pca = PCA()
-        dm_reductions = [pca]  
-
         print("testing : "+str(clf))
         scores = cross_val_score(clf, X, target, cv=cv,scoring=scoring)
         print(scores)
+       
         # PCA
         # X = StandardScaler().fit_transform(X)
         # pca = PCA(n_components=12)
         # X = pca.fit_transform(X, y=target)
         scorer = make_scorer(accuracy_score)
 
-        X_train_calibrate, X_test, y_train_calibrate, y_test = train_test_split(X, target, test_size=0.20)
-        X_train, X_calibrate, y_train, y_calibrate = train_test_split(X_train_calibrate, y_train_calibrate, test_size = 0.3, random_state = 42)
+        #Initializing dimensionality reductions
+        pca = PCA()
+        dm_reductions = [pca]  
+        X_train_calibrate, X_test, y_train_calibrate, y_test = train_test_split(X, target, test_size=0.1)
+        X_train, X_calibrate, y_train, y_calibrate = train_test_split(X_train_calibrate, y_train_calibrate)
+        #test_size = 0.1, random_state = 42
 
         #Creating cross validation data splits
         cv_sets = model_selection.StratifiedShuffleSplit(n_splits = 5, test_size = 0.20, random_state = 5)
@@ -251,6 +248,7 @@ def train_classifier(clf, dm_reduction, X_train, y_train, cv_sets, params, score
         
         #Grid search over pipeline and return best classifier
         grid_obj = model_selection.GridSearchCV(pipeline, param_grid = params, scoring = scorer, cv = cv_sets, n_jobs = jobs)
+        print(X_train.shape)
         grid_obj.fit(X_train, y_train)
         best_pipe = grid_obj.best_estimator_
     else:

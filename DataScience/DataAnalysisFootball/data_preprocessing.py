@@ -7,8 +7,8 @@ from random import random
 import football_helpers as football
 
 data_folder = 'data/'
-#season_years=[2016, 2017, 2018]
-season_years=[2018]
+season_years=[2016, 2017, 2018]
+#season_years=[2017]
 
 conn = pyodbc.connect("Driver={SQL Server Native Client 11.0};"
                      "Server=Martin-PC\SQLEXPRESS;"
@@ -99,7 +99,7 @@ def preprocess():
 
     previous_data = pd.read_csv(data_folder + '/data.csv')
     data = previous_data.append(data)
-    data.to_csv(data_folder + 'processed/features.csv',index=False)
+    data.to_csv(data_folder + 'processed/features_1.csv',index=False)
 
 def get_matches_team(date, team, last_n, is_home):
     ''' Get the last x matches of a given team. '''
@@ -140,32 +140,80 @@ def get_match_features(match):
     home_team_name = football.get_full_name(match.HomeTeam)
     away_team_name = football.get_full_name(match.AwayTeam)
 
-    matches_home_team_home = get_matches_team(match.Date, home_team_name, 15, True) 
-    home_team_home = process_matches_average(matches_home_team_home, home_team_name)
+    matches_home_team_home_1 = get_matches_team(match.Date, home_team_name, 1, True) 
+    home_team_home_1 = process_matches_average(matches_home_team_home_1, home_team_name)
 
-    #matches_home_team_away = get_matches_team(match.Date, home_team_name, 15, False) 
-    #home_team_away = process_matches_average(matches_home_team_away, home_team_name)
-   
-    #matches_away_team_home = get_matches_team(match.Date, away_team_name, 15, True)
-    #away_team_home = process_matches_average(matches_away_team_home, away_team_name)
+    matches_home_team_home_3 = get_matches_team(match.Date, home_team_name, 3, True) 
+    home_team_home_3 = process_matches_average(matches_home_team_home_3, home_team_name)
 
-    matches_away_team_away = get_matches_team(match.Date, away_team_name, 15, False)
-    away_team_away = process_matches_average(matches_away_team_away, away_team_name)
+    matches_home_team_home_6 = get_matches_team(match.Date, home_team_name, 6, True) 
+    home_team_home_6 = process_matches_average(matches_home_team_home_6, home_team_name)
+
+    matches_home_team_away_1 = get_matches_team(match.Date, home_team_name, 1, False) 
+    home_team_away_1 = process_matches_average(matches_home_team_away_1, home_team_name)
+
+    matches_home_team_away_3 = get_matches_team(match.Date, home_team_name, 3, False) 
+    home_team_away_3 = process_matches_average(matches_home_team_away_3, home_team_name)
+
+    matches_home_team_away_6 = get_matches_team(match.Date, home_team_name, 6, False) 
+    home_team_away_6 = process_matches_average(matches_home_team_away_6, home_team_name)
+
+    matches_away_team_away_1 = get_matches_team(match.Date, away_team_name, 1, False)
+    away_team_away_1 = process_matches_average(matches_away_team_away_1, away_team_name)
+
+    matches_away_team_away_3 = get_matches_team(match.Date, away_team_name, 3, False)
+    away_team_away_3 = process_matches_average(matches_away_team_away_3, away_team_name)
+
+    matches_away_team_away_6 = get_matches_team(match.Date, away_team_name, 6, False)
+    away_team_away_6 = process_matches_average(matches_away_team_away_6, away_team_name)
+
+    matches_away_team_home_1 = get_matches_team(match.Date, away_team_name, 1, True)
+    away_team_home_1 = process_matches_average(matches_away_team_home_1, away_team_name)
+
+    matches_away_team_home_3 = get_matches_team(match.Date, away_team_name, 3, True)
+    away_team_home_3 = process_matches_average(matches_away_team_home_3, away_team_name)
+
+    matches_away_team_home_6 = get_matches_team(match.Date, away_team_name, 6, True)
+    away_team_home_6 = process_matches_average(matches_away_team_home_6, away_team_name)
 
     direct_matches = get_last_direct_matches(match.Date, home_team_name, away_team_name, 6)
     
     home_team_direct = process_matches_average(direct_matches, home_team_name)
     away_team_direct = process_matches_average(direct_matches, away_team_name)
 
-    data=[home_team_home.loc['average'], home_team_direct.loc['average'], away_team_away.loc['average'], away_team_direct.loc['average']]
+    data=[
+        home_team_home_1.loc['average'], 
+        home_team_home_3.loc['average'],
+        home_team_home_6.loc['average'],
+        home_team_away_1.loc['average'], 
+        home_team_away_3.loc['average'],
+        home_team_away_6.loc['average'],
+        home_team_direct.loc['average'],
+        away_team_away_1.loc['average'],
+        away_team_away_3.loc['average'],
+        away_team_away_6.loc['average'],
+        away_team_home_1.loc['average'],
+        away_team_home_3.loc['average'],
+        away_team_home_6.loc['average'],
+        away_team_direct.loc['average']]
     
     data=np.hstack(data)
     home_away=pd.DataFrame(data)
     home_away=home_away.transpose()
     home_away.columns=np.hstack([
-        'home_home_'+ home_team_home.columns,
+        'home_home_1_'+ home_team_home_1.columns,
+        'home_home_3_'+ home_team_home_3.columns,
+        'home_home_6_'+ home_team_home_6.columns,
+        'home_away_1_'+ home_team_away_1.columns,
+        'home_away_3_'+ home_team_away_3.columns,
+        'home_away_6_'+ home_team_away_6.columns,
         'home_direct_'+ home_team_direct.columns,
-        'away_away_'+ away_team_away.columns,
+        'away_away_1_'+ away_team_away_1.columns,
+        'away_away_3_'+ away_team_away_3.columns,
+        'away_away_6_'+ away_team_away_6.columns,
+        'away_home_1_'+ away_team_home_1.columns,
+        'away_home_3_'+ away_team_home_3.columns,
+        'away_home_6_'+ away_team_home_6.columns,
         'away_direct_'+ away_team_direct.columns
         ])
     

@@ -131,43 +131,63 @@ def run_clf(clf, dm, drop_columns):
     prediction = clf.predict(dm.transform(X))
     return prediction
 
-def calibrate_train_clfs(clfs,X,target,cv=10,scoring="accuracy"):
+def calibrate_train_clfs(clfs,X,y):
     res = defaultdict(list)
     feature_len = X.shape[1]
     parameters_GNB = {'dm_reduce__n_components': np.arange(5, feature_len, int(np.around(feature_len/5)))}
-
     for clf in clfs:
         print("testing : "+str(clf))
-        scores = cross_val_score(clf, X, target, cv=cv,scoring=scoring)
+        scores = cross_val_score(clf, X, y, cv=10,scoring="accuracy")
         print(scores)
-       
         # PCA
         # X = StandardScaler().fit_transform(X)
         # pca = PCA(n_components=12)
         # X = pca.fit_transform(X, y=target)
+        
         scorer = make_scorer(accuracy_score)
-
-        #Initializing dimensionality reductions
         pca = PCA()
         dm_reductions = [pca]  
-        X_train_calibrate, X_test, y_train_calibrate, y_test = train_test_split(X, target, test_size=0.1)
-        X_train, X_calibrate, y_train, y_calibrate = train_test_split(X_train_calibrate, y_train_calibrate)
+        X_train_calibrate, X_test, y_train_calibrate, y_test = train_test_split(X, y,  test_size=0.1, shuffle = False)
+        X_train, X_calibrate, y_train, y_calibrate = train_test_split(X_train_calibrate, y_train_calibrate, shuffle = False)
         #test_size = 0.1, random_state = 42
 
         #Creating cross validation data splits
-        cv_sets = model_selection.StratifiedShuffleSplit(n_splits = 5, test_size = 0.20, random_state = 5)
-        cv_sets.get_n_splits(X_train, y_train)
+        #from sklearn. import TimeSeriesSplit
+        # tscv = model_selection.TimeSeriesSplit(n_splits=2)# max_train_size=100
+        # for train_index, test_index in tscv.split(X):
+        #     print("TRAIN:", train_index.shape, "\nTEST:", test_index.shape)
+        #     X_train_calibrate, X_test = X[train_index], X[test_index]
+        #     y_train_calibrate, y_test = y[train_index], y[test_index]
 
-        clf, dm_reduce, train_score, test_score = train_calibrate_predict(clf = clf, dm_reduction = pca, X_train = X_train, y_train = y_train,
-                    X_calibrate = X_calibrate, y_calibrate = y_calibrate,
-                    X_test = X_test, y_test = y_test, cv_sets = cv_sets,
-                    params = parameters_GNB, scorer = scorer, jobs = 1, use_grid_search = True)
+        # for train_index, test_index in tscv.split(X_train_calibrate):
+        #     print("TRAIN:", train_index.shape, "\nTEST:", test_index.shape)
+        #     X_train, X_calibrate = X_train_calibrate[train_index], X_train_calibrate[test_index]
+        #     y_train, y_calibrate = y_train_calibrate[train_index], y_train_calibrate[test_index]
+        #     print('X_train{} X_calibrate{} y_train{} y_calibrate{} X_test{} y_test{}'.format(
+        #         X_train.shape, 
+        #         X_calibrate.shape,
+        #         y_train.shape,
+        #         y_calibrate.shape,
+        #         X_test.shape,
+        #         y_test.shape
+        #     ))
+
+        cv_sets = model_selection.StratifiedShuffleSplit(n_splits = 5, test_size = 0.20, random_state = 5)
+        #cv_sets = tscv.split(X)
+        print("cv sets !!" +str(cv_sets))
+        #cv_sets.get_n_splits(X_train, y_train)
+
+        clf, dm_reduce, train_score, test_score = train_calibrate_predict(
+            clf = clf, dm_reduction = pca, X_train = X_train, y_train = y_train,
+            X_calibrate = X_calibrate, y_calibrate = y_calibrate,
+            X_test = X_test, y_test = y_test, cv_sets = cv_sets,
+            params = parameters_GNB, scorer = scorer, jobs = 1, use_grid_search = True)
         
         #from sklearn import preprocessing
         #lb = preprocessing.LabelBinarizer()
 
         clf_fit = clf.fit(dm_reduce.transform(X_train), y_train)
-        prediction = clf.predict(dm_reduce.transform(X_test))
+        prediction = clf_fit.predict(dm_reduce.transform(X_test))
         accuracy = accuracy_score(y_test, prediction)
         precision = precision_score(y_test, prediction, average=None)
         recall = recall_score(y_test, prediction, average=None)
@@ -192,8 +212,12 @@ def calibrate_train_clfs(clfs,X,target,cv=10,scoring="accuracy"):
     return res
 
 
-def train_calibrate_predict(clf, dm_reduction, X_train, y_train, X_calibrate, y_calibrate, X_test, y_test, cv_sets, params, scorer, jobs, 
-                            use_grid_search = True, **kwargs):
+def train_calibrate_predict(clf, dm_reduction, 
+        X_train, y_train, 
+        X_calibrate, y_calibrate,
+        X_test, y_test,
+        cv_sets, params, scorer, jobs, 
+        use_grid_search = True, **kwargs):
     ''' Train and predict using a classifer based on scorer. '''
     
     #Indicate the classifier and the training set size
@@ -223,9 +247,9 @@ def predict_labels(clf, best_pipe, features, target):
     #Start the clock, make predictions, then stop the clock
     start = time()
     y_pred = clf.predict(best_pipe.named_steps['dm_reduce'].transform(features))
-    print(target.values)
-    print("actual")
-    print(y_pred)
+    #print(target.values)
+    #print("actual")
+    #print(y_pred)
     end = time()
     
     #Print and return results
@@ -246,9 +270,11 @@ def train_classifier(clf, dm_reduction, X_train, y_train, cv_sets, params, score
         estimators = [('dm_reduce', dm_reduction), ('clf', clf)]
         pipeline = Pipeline(estimators)
         
+        print(X_train.shape)
+        print(y_train.shape)
         #Grid search over pipeline and return best classifier
         grid_obj = model_selection.GridSearchCV(pipeline, param_grid = params, scoring = scorer, cv = cv_sets, n_jobs = jobs)
-        print(X_train.shape)
+        
         grid_obj.fit(X_train, y_train)
         best_pipe = grid_obj.best_estimator_
     else:

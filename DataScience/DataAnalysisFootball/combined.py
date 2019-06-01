@@ -24,9 +24,9 @@ drop_columns = [
     'VCA', 'VCD', 'VCH', 'WHA', 'WHD', 'WHH'
 ]
 
-X,target = load_data(columns_to_drop=drop_columns, is_training=True)
+X,y = load_data(columns_to_drop=drop_columns, is_training=True)
 print(X.shape)
-res=calibrate_train_clfs(clfs=helpers.clfs,X=X,target=target,cv=10)
+res=calibrate_train_clfs(helpers.clfs,X,y)
 
 get_baseline()
 print_results(res)

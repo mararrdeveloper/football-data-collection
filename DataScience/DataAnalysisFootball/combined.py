@@ -18,14 +18,26 @@ keep_columns =  ['IsTraining','FTR', 'Div', 'Date', 'HomeTeam', 'AwayTeam',
 ]
 
 drop_columns = [
-    'B365H', 'B365D', 'B365A','AC', 'AF', 'AR', 'AS', 'AST', 'AY', 'BWA', 'BWD', 'BWH', 'Bb1X2', 'BbAH', 'BbAHh', 'BbAv<2.5', 'BbAv>2.5', 'BbAvA', 'BbAvAHA', 
-    'BbAvAHH', 'BbAvD', 'BbAvH', 'BbMx<2.5', 'BbMx>2.5', 'BbMxA', 'BbMxAHA', 'BbMxAHH', 'BbMxD', 'BbMxH', 'BbOU', 
-    'FTAG', 'FTHG', 'HC', 'HF', 'HR', 'HS', 'HST', 'HTAG', 'HTHG', 'HTR', 'HY', 'IWA', 'IWD', 'IWH', 'LBA', 'LBD', 'LBH', 'PSA', 'PSCA', 'PSCD', 'PSCH', 'PSD', 'PSH', 
-    'VCA', 'VCD', 'VCH', 'WHA', 'WHD', 'WHH'
+    'FTR',
+    'B365H', 'B365D', 'B365A',
+    'AC', 'AF', 'AR', 'AS', 'AST', 'AY', 
+    'BWA', 'BWD', 'BWH', 'Bb1X2', 'BbAH', 'BbAHh', 'BbAv<2.5', 'BbAv>2.5', 'BbAvA', 'BbAvAHA', 
+    'BbAvAHH', 'BbAvD', 'BbAvH', 'BbMx<2.5', 'BbMx>2.5', 'BbMxA', 'BbMxAHA', 'BbMxAHH', 'BbMxD',
+    'BbMxH', 'BbOU', 'FTAG', 
+    'HC', 'HF', 'HR', 'HS', 'HST', 
+    'HTAG', 'HTHG', 'HTR', 'HY', 'IWA', 'IWD', 'IWH', 
+    'LBA', 'LBD', 'LBH', 'PSA', 'PSCA', 'PSCD', 'PSCH', 'PSD', 'PSH', 
+    'VCA', 'VCD', 'VCH', 'WHA', 'WHD', 'WHH', 'GoalFirstHalf', 'SHHG', 'SHAG', 'GoalSecondHalf','FTR','BothToScore',
 ]
+target_name1 = "BothToScore"
+drop_columns = drop_columns.remove(target_name1)
+X,y = load_data(columns_to_drop=drop_columns, target_name=target_name1, is_training=True)
 
-X,y = load_data(columns_to_drop=drop_columns, is_training=True)
-print(X.shape)
+# X=X.values
+# y=y.values
+# y = [1 if x else 0 for x in y]
+#print(X.shape)
+#y = pd.DataFrame(y)
 res=calibrate_train_clfs(helpers.clfs,X,y)
 
 get_baseline()

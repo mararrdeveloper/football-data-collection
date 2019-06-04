@@ -31,7 +31,7 @@ clfs = [#LogisticRegression(),
         # RandomForestClassifier(max_depth=5, n_estimators=10, max_features=1),
         # MLPClassifier(alpha=1),
         # AdaBoostClassifier(),
-        GaussianNB(),
+         GaussianNB(),
         # QuadraticDiscriminantAnalysis(),
         # MLPClassifier(hidden_layer_sizes=(20, ),solver='lbfgs')
         ]
@@ -46,10 +46,10 @@ def load_data(columns_to_keep=None,columns_to_drop=None,scaler=StandardScaler(),
     df =_data_load_helper()
     return _preprocess_data(df,columns_to_keep,columns_to_drop,scaler,target_name, is_training)
    
-def _data_load_helper(data_path = "data/processed/features_1.csv"):
+def _data_load_helper(data_path = "data/processed/features_0.csv"):
     #data/processed/predict_stats_odds_0000.csv
     df = pd.read_csv(data_path)
-
+    #print(df.columns)
     df = df.fillna(0)
     df = df.reset_index()
     return df
@@ -85,7 +85,7 @@ def _preprocess_data(df,columns_to_keep=None,columns_to_drop=None,scaler=Standar
     #choices for scalers are StandardScaler and MinMaxScaler
  
     #print(X.head())
-    X=scaler.fit_transform(X)
+    #X=scaler.fit_transform(X)
     
     print("LENGTH" + str(length))
     if is_training:
@@ -148,7 +148,7 @@ def calibrate_train_clfs(clfs,X,y):
         pca = PCA()
         dm_reductions = [pca]  
         X_train_calibrate, X_test, y_train_calibrate, y_test = train_test_split(X, y,  test_size=0.1, shuffle = False)
-        X_train, X_calibrate, y_train, y_calibrate = train_test_split(X_train_calibrate, y_train_calibrate, shuffle = False)
+        X_train, X_calibrate, y_train, y_calibrate = train_test_split(X_train_calibrate, y_train_calibrate, test_size=0.2, shuffle = False)
         #test_size = 0.1, random_state = 42
 
         #Creating cross validation data splits
@@ -172,8 +172,9 @@ def calibrate_train_clfs(clfs,X,y):
         #         y_test.shape
         #     ))
 
-        cv_sets = model_selection.StratifiedShuffleSplit(n_splits = 5, test_size = 0.20, random_state = 5)
-        #cv_sets = tscv.split(X)
+        cv_sets = model_selection.KFold(n_splits = 5, shuffle=False)
+        #cv_sets = model_selection.TimeSeriesSplit(n_splits = 2)
+        #cv_sets = cv_sets.split(X_train)
         print("cv sets !!" +str(cv_sets))
         #cv_sets.get_n_splits(X_train, y_train)
 
@@ -254,7 +255,7 @@ def predict_labels(clf, best_pipe, features, target):
     
     #Print and return results
     print("Made predictions in {:.4f} seconds".format(end - start))
-    return accuracy_score(target.values, y_pred)
+    return accuracy_score(target, y_pred)
 
 def train_classifier(clf, dm_reduction, X_train, y_train, cv_sets, params, scorer, jobs, use_grid_search = True, 
                      best_components = None, best_params = None):
@@ -270,8 +271,11 @@ def train_classifier(clf, dm_reduction, X_train, y_train, cv_sets, params, score
         estimators = [('dm_reduce', dm_reduction), ('clf', clf)]
         pipeline = Pipeline(estimators)
         
-        print(X_train.shape)
-        print(y_train.shape)
+        #print(X_train.shape)
+        #print(y_train.shape)
+        #print('!!!!! TRAIN SHAPE {} {}'.format(X_train.shape, y_train.shape))
+
+        #print(cv_sets.shape)
         #Grid search over pipeline and return best classifier
         grid_obj = model_selection.GridSearchCV(pipeline, param_grid = params, scoring = scorer, cv = cv_sets, n_jobs = jobs)
         

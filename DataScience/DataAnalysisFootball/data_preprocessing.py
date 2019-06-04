@@ -86,11 +86,20 @@ def preprocess():
         alldata.append(pd.concat([matches_with_odds, match_stats], axis=1))
 
     data=pd.concat(alldata,axis=0)
+
     data['IsTraining'] = True
+    data['BothToScore'] = ((data['FTHG'] > 0) & (data['FTAG'] > 0))
+    data['GoalFirstHalf'] = ((data['HTHG'] > 0) | (data['HTAG'] > 0))
+    data['SHHG'] =  (data['FTHG'] - data['HTHG'])
+    data['SHAG'] =  (data['FTAG'] - data['HTAG'] )
+    data['GoalSecondHalf'] = ((data['SHHG'] > 0) | (data['SHAG'] > 0))
+    
     data.to_csv(data_folder + '/data.csv',index=False)
 
     matches_to_predict = pd.read_csv(data_folder + 'to_predict.csv')
     matches_to_predict['Date']=pd.to_datetime(matches_to_predict['Date'])
+    
+
     matches_to_predict_with_stats = matches_to_predict.apply(lambda x: get_match_features(x), axis = 1)
     alldata = []
     alldata.append(pd.concat([matches_to_predict, matches_to_predict_with_stats], axis=1)[matches_to_predict.columns.tolist() + matches_to_predict_with_stats.columns.tolist()])
@@ -99,7 +108,7 @@ def preprocess():
 
     previous_data = pd.read_csv(data_folder + '/data.csv')
     data = previous_data.append(data)
-    data.to_csv(data_folder + 'processed/features_1.csv',index=False)
+    data.to_csv(data_folder + 'processed/features_0.csv',index=False)
 
 def get_matches_team(date, team, last_n, is_home):
     ''' Get the last x matches of a given team. '''

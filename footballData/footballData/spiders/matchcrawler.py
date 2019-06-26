@@ -93,7 +93,7 @@ class MatchSpider(scrapy.Spider):
         season = response.meta['season']
         stage = response.meta['stage']
         matchesDataEventList = response.xpath('//a[contains(@class, "mx-link")]/@data-event').extract()
-        dateList = response.xpath('//span[@class="mx-time-startdatetime mx-break-small"]/text()').extract()
+       # dateList = response.xpath('//span[@class="mx-time-startdatetime mx-break-small"]/text()').extract()
      
         matchList = list()
         if len(self.matches) >= 1:
@@ -111,7 +111,7 @@ class MatchSpider(scrapy.Spider):
             match["league"] = league
             match["season"] = season
             #date = dateList[counter]
-            match["date"] = dateList[0]
+            #match["date"] = dateList[0]
             
             url = 'http://reuters.mx-api.enetscores.com/page/xhr/match_center/' + matchId + '/'
             counter += 1
@@ -132,7 +132,8 @@ class MatchSpider(scrapy.Spider):
         homeAcronym = response.xpath('//div[@class="mx-team-home-name mx-show-small"]/a/text()').re('\t+([^\n]+[^\t]+)\n+\t+')
         homeTeamGoal = response.xpath('//div[@class="mx-res-home mx-js-res-home"]/@data-res').extract_first()
         awayTeamGoal = response.xpath('//div[@class="mx-res-away mx-js-res-away"]/@data-res').extract_first()
-        
+        date = response.xpath('//html/body/div/div/div/div[3]/div/div[3]/div[1]/div[2]/@data-startdate_utc').extract()
+
         match['homeTeamFullName'] = fullTeamNameHome
         match['awayTeamFullName'] = fullTeamNameAway
         match['homeTeamAcronym'] = homeAcronym
@@ -141,6 +142,7 @@ class MatchSpider(scrapy.Spider):
         match['awayTeamId'] = teamIdAway
         match['homeTeamGoal'] = homeTeamGoal
         match['awayTeamGoal'] = awayTeamGoal
+        match["date"] = date
         matchId = match['matchId']
         
         url = 'http://reuters.mx-api.enetscores.com/page/xhr/event_gamecenter/' + matchId + '%2Fv2_lineup/'

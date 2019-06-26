@@ -29,9 +29,11 @@ drop_columns = [
     'LBA', 'LBD', 'LBH', 'PSA', 'PSCA', 'PSCD', 'PSCH', 'PSD', 'PSH', 
     'VCA', 'VCD', 'VCH', 'WHA', 'WHD', 'WHH', 'GoalFirstHalf', 'SHHG', 'SHAG', 'GoalSecondHalf','FTR','BothToScore',
 ]
-target_name1 = "BothToScore"
+target_name1 = "FTR"
 drop_columns = drop_columns.remove(target_name1)
+
 X,y = load_data(columns_to_drop=drop_columns, target_name=target_name1, is_training=True)
+#X = X[X.columns.drop(list(X.filter(regex='_1_')))]
 
 # X=X.values
 # y=y.values

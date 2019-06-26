@@ -7,7 +7,7 @@ from random import random
 import football_helpers as football
 
 data_folder = 'data/'
-season_years=[2016, 2017, 2018]
+season_years=[2015, 2016, 2017, 2018]
 #season_years=[2017]
 
 conn = pyodbc.connect("Driver={SQL Server Native Client 11.0};"

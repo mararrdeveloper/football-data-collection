@@ -83,6 +83,8 @@ def preprocess():
         matches_with_odds = pd.read_csv(data_folder + str(f)+'.csv')
         matches_with_odds['Date']=pd.to_datetime(matches_with_odds['Date'])
         match_stats = matches_with_odds.apply(lambda x: get_match_features(x), axis = 1)
+        matches_with_odds
+
         alldata.append(pd.concat([matches_with_odds, match_stats], axis=1))
 
     data=pd.concat(alldata,axis=0)
@@ -109,38 +111,6 @@ def preprocess():
     previous_data = pd.read_csv(data_folder + '/data.csv')
     data = previous_data.append(data)
     data.to_csv(data_folder + 'processed/features_0.csv',index=False)
-
-def get_matches_team(date, team, last_n, is_home):
-    ''' Get the last x matches of a given team. '''
-    #Filter team matches from matches
-    if is_home:
-        team_matches = df_matches[(df_matches['HomeTeam'] == team)].drop_duplicates(['ExternalId'])
-    else:
-        team_matches = df_matches[(df_matches['AwayTeam'] == team)].drop_duplicates(['ExternalId'])
-        
-    team_matches['ExternalId'] = team_matches['ExternalId'].astype(int)
-    last_matches = get_last_n_matches(team_matches, date, last_n)
-
-    if len(last_matches) == 0:
-        print("No matches for " + team)
-    return last_matches
-
-def get_last_n_matches(team_matches, date, last_n):
-    last_matches = team_matches[team_matches.Date <= date].sort_values(by = 'Date', ascending = False).iloc[0:last_n,:] 
-    return last_matches
-
-#last_matches = get_last_matches("2018-08-27 15:00:00", "Arsenal", 15)
-#last_matches.head()
-def get_last_direct_matches(date, team_home, team_away, last_n):
-    direct_matches = df_matches[((df_matches['HomeTeam'] == team_home) & (df_matches['AwayTeam'] == team_away)) |
-        (df_matches['HomeTeam'] == team_away) & (df_matches['AwayTeam'] == team_home)]
-
-    direct_matches['ExternalId'] = direct_matches['ExternalId'].astype(int)
-    last_matches = get_last_n_matches(direct_matches, date, last_n)
-    
-    if len(last_matches) == 0:
-        print("No direct matches for " + team_home + " " +team_away)
-    return last_matches
 
 def get_match_features(match):
     ''' Create match specific features for a given match. '''
@@ -228,6 +198,39 @@ def get_match_features(match):
     
     print(str(match.Date) + " " + home_team_name + " " + away_team_name)
     return home_away.iloc[0]
+def get_matches_team(date, team, last_n, is_home):
+    ''' Get the last x matches of a given team. '''
+    #Filter team matches from matches
+    if is_home:
+        team_matches = df_matches[(df_matches['HomeTeam'] == team)].drop_duplicates(['ExternalId'])
+    else:
+        team_matches = df_matches[(df_matches['AwayTeam'] == team)].drop_duplicates(['ExternalId'])
+        
+    team_matches['ExternalId'] = team_matches['ExternalId'].astype(int)
+    last_matches = get_last_n_matches(team_matches, date, last_n)
+
+    if len(last_matches) == 0:
+        print("No matches for " + team)
+    return last_matches
+
+def get_last_n_matches(team_matches, date, last_n):
+    last_matches = team_matches[team_matches.Date <= date].sort_values(by = 'Date', ascending = False).iloc[0:last_n,:] 
+    return last_matches
+
+#last_matches = get_last_matches("2018-08-27 15:00:00", "Arsenal", 15)
+#last_matches.head()
+def get_last_direct_matches(date, team_home, team_away, last_n):
+    direct_matches = df_matches[((df_matches['HomeTeam'] == team_home) & (df_matches['AwayTeam'] == team_away)) |
+        (df_matches['HomeTeam'] == team_away) & (df_matches['AwayTeam'] == team_home)]
+
+    direct_matches['ExternalId'] = direct_matches['ExternalId'].astype(int)
+    last_matches = get_last_n_matches(direct_matches, date, last_n)
+    
+    if len(last_matches) == 0:
+        print("No direct matches for " + team_home + " " +team_away)
+    return last_matches
+
+
 
 def process_matches_average(matches, team_name):
     home_team_data = pd.DataFrame(index=['average'])
@@ -241,9 +244,9 @@ def process_matches_average(matches, team_name):
 
         home_team_match_data = get_team_features(match_id, home_team_id, is_home)
         home_team_data = home_team_data.append(home_team_match_data)
-    
+        #print(home_team_data.head())
     if len(home_team_data) > 0:
-        home_team_data.loc['average'] = home_team_data.sum().div(len(matches))
+        home_team_data.loc['average'] = home_team_data.sum()
 
     return home_team_data
 
@@ -259,6 +262,14 @@ def get_team_features(match_id, team_id, is_home):
     result.loc[0, 'team_corners_for'] = match_corners_for.shape[0]
     match_corners_against = df_corners[(df_corners['TeamId'] != team_id) & (df_corners['MatchId'] == match_id)]
     result.loc[0, 'team_corners_against'] = match_corners_against.shape[0]
+
+    # corners = df_corners[(df_corners['MatchId'] == match_id)]
+    # match_first_corner = corners['Minute'].min()
+    # result.loc[0, 'match_first_corner'] = match_first_corner
+    # print(corners.shape)
+    # print(match_first_corner)
+    # print()
+
 
     match_shotson_for = df_shots_on[(df_shots_on['TeamId'] == team_id) & (df_shots_on['MatchId'] == match_id)]
     result.loc[0, 'team_shotson_for'] = match_shotson_for.shape[0]

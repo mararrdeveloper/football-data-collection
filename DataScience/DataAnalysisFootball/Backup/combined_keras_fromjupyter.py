@@ -153,13 +153,13 @@ def get_sequence(n_timesteps, X, y):
 
 
 #seed = 7
-#numpy.random.seed(seed)
-from sklearn.model_selection import TimeSeriesSplit
-tscv = TimeSeriesSplit(n_splits=2)# max_train_size=100
-for train_index, test_index in tscv.split(X):
-    print("TRAIN:", train_index, "TEST:", test_index)
-    X_train, X_test = X[train_index], X[test_index]
-    y_train, y_test = y[train_index], y[test_index]
+# #numpy.random.seed(seed)
+# from sklearn.model_selection import TimeSeriesSplit
+# tscv = TimeSeriesSplit(n_splits=2)# max_train_size=100
+# for train_index, test_index in tscv.split(X):
+#     print("TRAIN:", train_index, "TEST:", test_index)
+#     X_train, X_test = X[train_index], X[test_index]
+#     y_train, y_test = y[train_index], y[test_index]
 
 #kfold = KFold(n_splits=10)
 # shuffle=True, random_state=seed

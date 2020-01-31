@@ -14,6 +14,7 @@ from sklearn.model_selection import cross_val_score, train_test_split, KFold, Ti
 from sklearn.metrics import accuracy_score, precision_score, recall_score, confusion_matrix, make_scorer
 from sklearn.pipeline import Pipeline
 from collections import defaultdict
+import xgboost as xgb
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -22,7 +23,7 @@ from time import time
 
 
 clfs = [#LogisticRegression(),  
-        # RandomForestClassifier(n_estimators=200),
+        #RandomForestClassifier(n_estimators=200),
         # ExtraTreesClassifier(n_estimators=50),
         # KNeighborsClassifier(5),
         # SVC(kernel="linear", C=0.025,degree=2),
@@ -31,7 +32,8 @@ clfs = [#LogisticRegression(),
         # RandomForestClassifier(max_depth=5, n_estimators=10, max_features=1),
         # MLPClassifier(alpha=1),
         # AdaBoostClassifier(),
-         GaussianNB(),
+        # GaussianNB(),
+         xgb.XGBClassifier(random_state=1,learning_rate=0.01),
         # QuadraticDiscriminantAnalysis(),
         # MLPClassifier(hidden_layer_sizes=(20, ),solver='lbfgs')
         ]
@@ -44,6 +46,7 @@ def getScores(estimator, x, y):
 
 def load_data(columns_to_keep=None,columns_to_drop=None,scaler=StandardScaler(),target_name="FTR", is_training=True):
     df =_data_load_helper()
+   
     return _preprocess_data(df,columns_to_keep,columns_to_drop,scaler,target_name, is_training)
    
 def _data_load_helper(data_path = "data/processed/features_0.csv"):
@@ -59,12 +62,11 @@ def _preprocess_data(df,columns_to_keep=None,columns_to_drop=None,scaler=Standar
     #df.month=str(df.month)
     #df['HomeTeam'] = pd.Categorical(df.HomeTeam)
     #df['AwayTeam'] = pd.Categorical(df.AwayTeam)
-    print("KEEEP")
-    #print(columns_to_keep)
+    
     df = df.dropna(subset=['B365H','B365A','B365D'])
+    
     if columns_to_keep!=None:
         df=df[columns_to_keep]
-        print(df.shape)
     elif columns_to_drop!=None:
         df=df.drop(labels=columns_to_drop,axis=1)
     
@@ -73,12 +75,15 @@ def _preprocess_data(df,columns_to_keep=None,columns_to_drop=None,scaler=Standar
     else:
         targets = df[df['IsTraining'] == False]
 
+    print(list(columns_to_drop))
+    #print(targets.columns)
+    
     target=targets[target_name]
     length = len(target)
     df.to_csv('data/processed/features_scaled.csv')
     df=df.drop(target_name,axis=1)
     df=df.drop("IsTraining",axis=1)
-    #print(df.columns)        
+    print(df.columns)        
     df = pd.get_dummies(df)
     
     X=df

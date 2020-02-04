@@ -24,11 +24,11 @@ stmt = """SELECT  Teams.FullName as HomeTeam, Teams2.FullName as AwayTeam,
       ,[League]
       ,[Season]
       ,[Stage]
-      ,[AwayTeam_Id]
-      ,[HomeTeam_Id]
-FROM  [FootballData].[dbo].[Matches]
-LEFT JOIN [Teams] ON Matches.HomeTeam_Id = Teams.Id
-LEFT JOIN [Teams] as Teams2 ON Matches.AwayTeam_Id = Teams2.Id"""
+      ,[AwayTeam_ExternalId]
+      ,[HomeTeam_ExternalId]
+FROM  [FootballData].[ENETSCORES].[Matches]
+LEFT JOIN [ENETSCORES].[Teams] ON Matches.HomeTeam_ExternalId = Teams.ExternalId
+LEFT JOIN [ENETSCORES].[Teams] as Teams2 ON Matches.AwayTeam_ExternalId = Teams2.ExternalId"""
 
 # Excute Query here
 df_matches = pd.read_sql(stmt,conn)
@@ -36,31 +36,31 @@ df_matches.drop_duplicates(['ExternalId'], inplace=True)
 df_matches['Date']=pd.to_datetime(df_matches['Date'])
 print(df_matches.shape)
 
-stmt = "SELECT * FROM Goals"
+stmt = "SELECT * FROM [ENETSCORES].Goals"
 df_goals = pd.read_sql(stmt,conn)
-df_goals.drop('Id', inplace=True, axis=1)
+#df_goals.drop('Id', inplace=True, axis=1)
 df_goals.drop_duplicates(inplace=True)
 print(df_goals.shape)
 
-stmt = "SELECT * FROM Corners"
+stmt = "SELECT * FROM [ENETSCORES].Corners"
 df_corners = pd.read_sql(stmt,conn)
 df_corners.drop_duplicates(['ExternalId'], inplace=True)
 df_corners.head(2)
 print(df_corners.shape)
 
-stmt = "SELECT * FROM ShotOns"
+stmt = "SELECT * FROM [ENETSCORES].ShotOns"
 df_shots_on = pd.read_sql(stmt,conn)
 df_shots_on.drop_duplicates(['ExternalId'], inplace=True)
 print(df_shots_on.shape)
 
 #Shots off select
-stmt = "SELECT * FROM ShotOffs"
+stmt = "SELECT * FROM [ENETSCORES].ShotOffs"
 df_shots_off = pd.read_sql(stmt,conn)
 df_shots_off.drop_duplicates(['ExternalId'], inplace=True)
 print(df_shots_off.shape)
 
 #Possessions select
-stmt = "SELECT * FROM Possessions"
+stmt = "SELECT * FROM [ENETSCORES].Possessions"
 df_possessions = pd.read_sql(stmt,conn)
 
 df_possessions.drop_duplicates(['ExternalId'], inplace=True)
@@ -72,7 +72,7 @@ df_possessions['HomePossession'] = df_possessions['HomePossession'].astype(int)
 df_possessions['AwayPossession'] = df_possessions['AwayPossession'].astype(int)
 df_possessions['Minute'] = df_possessions['Minute'].astype(int)
 
-stmt = "SELECT * FROM Teams"
+stmt = "SELECT * FROM [ENETSCORES].Teams"
 df_teams = pd.read_sql(stmt,conn)
 df_teams.drop_duplicates(['ExternalId'], inplace=True)
 print(df_teams.shape)
@@ -207,6 +207,7 @@ def get_matches_team(date, team, last_n, is_home):
         team_matches = df_matches[(df_matches['AwayTeam'] == team)].drop_duplicates(['ExternalId'])
         
     team_matches['ExternalId'] = team_matches['ExternalId'].astype(int)
+
     last_matches = get_last_n_matches(team_matches, date, last_n)
 
     if len(last_matches) == 0:
@@ -229,7 +230,6 @@ def get_last_direct_matches(date, team_home, team_away, last_n):
     if len(last_matches) == 0:
         print("No direct matches for " + team_home + " " +team_away)
     return last_matches
-
 
 
 def process_matches_average(matches, team_name):

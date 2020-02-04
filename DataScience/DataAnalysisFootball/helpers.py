@@ -32,8 +32,8 @@ clfs = [#LogisticRegression(),
         # RandomForestClassifier(max_depth=5, n_estimators=10, max_features=1),
         # MLPClassifier(alpha=1),
         # AdaBoostClassifier(),
-        # GaussianNB(),
-         xgb.XGBClassifier(random_state=1,learning_rate=0.01),
+         GaussianNB(),
+        # xgb.XGBClassifier(random_state=1,learning_rate=0.01),
         # QuadraticDiscriminantAnalysis(),
         # MLPClassifier(hidden_layer_sizes=(20, ),solver='lbfgs')
         ]

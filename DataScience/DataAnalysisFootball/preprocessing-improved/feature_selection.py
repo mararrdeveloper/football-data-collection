@@ -140,7 +140,7 @@ def get_match_features(match):
                         left join goals_before_80 g80 on g80.MatchId = mm.MatchId
                         left join possession pp on pp.MatchId = mm.matchid
                         --Before data
-                        --where mm.Date <  CONVERT(DATETIME, '{}', 102)
+                        where mm.Date > CONVERT(DATETIME, '{}', 102)
                         group by mm.Date,
                         mm.MatchId,
                         mm.HomeTeamId,
@@ -156,7 +156,7 @@ def get_match_features(match):
             when HomeTeamGoals < AwayTeamGoals then 'A'
             end as match_result
         from match_stats t
-    """.format("10", match.HomeTeamId, match.Date),conn)
+    """.format("6", match.HomeTeamId, match.Date),conn)
     #df_matches['Date']=pd.to_datetime(df_matches['Date'])
     print(df_previous_matchs.shape)
     #print(str(match) )

@@ -37,15 +37,15 @@ def get_match_features(match):
     home_away = pd.DataFrame()
     print(match.Date)
     query = """
-        /****** Script for SelectTopNRows command from SSMS  ******/
-        with goals as  
+                /****** Script for SelectTopNRows command from SSMS  ******/
+        with goals as
             (SELECT
                 [MatchId]
                 ,count(distinct ExternalId) as team_goals
                 ,[TeamId]
             FROM [FootballData].[ENETSCORES].[Goals] g
             GROUP BY g.MatchId,g.TeamId),
-                goals_before_80 as  
+                goals_before_80 as
                     (SELECT
                         [MatchId]
                         ,1 as team_goals_before_80
@@ -96,8 +96,8 @@ def get_match_features(match):
                         group by MatchId, TeamId),
 
                     matches as (
-                        -- Top N matches 
-                        SELECT top {}	 
+                        -- Top N matches
+                        SELECT distinct top {}
                             [MatchId]
                             ,[Date]
                             ,[HomeTeamId]
@@ -108,10 +108,11 @@ def get_match_features(match):
                         -- Id parameter for home or away
                         where {}
                         {}
+						and m.date < CONVERT(DATETIME, '{}', 121)
                         order by date desc),
 
                     match_stats as (
-                        select 
+                        select distinct
                         mm.MatchId,
                         mm.HomeTeamFullName,
                         mm.AwayTeamFullName,
@@ -126,15 +127,15 @@ def get_match_features(match):
                         coalesce(max(case when son.TeamId = mm.AwayTeamId then team_shots_on end),0) as AwayTeamShotsOn,
                         coalesce(max(case when soff.TeamId = mm.HomeTeamId then team_shots_off end),0) as HomeTeamShotsOff,
                         coalesce(max(case when soff.TeamId = mm.AwayTeamId then team_shots_off end),0) as AwayTeamShotsOff,
-                        coalesce(max(case when cr.TeamId = mm.HomeTeamId then team_crosses end),0) as HomeTeamCrosses, 
-                        coalesce(max(case when cr.TeamId = mm.AwayTeamId then team_crosses end),0) as AwayTeamCrosses, 
-                        coalesce(max(case when g80.TeamId = mm.HomeTeamId then team_goals_before_80 end),0) as HomeTeamGoalsBefore80min, 
+                        coalesce(max(case when cr.TeamId = mm.HomeTeamId then team_crosses end),0) as HomeTeamCrosses,
+                        coalesce(max(case when cr.TeamId = mm.AwayTeamId then team_crosses end),0) as AwayTeamCrosses,
+                        coalesce(max(case when g80.TeamId = mm.HomeTeamId then team_goals_before_80 end),0) as HomeTeamGoalsBefore80min,
                         coalesce(max(case when g80.TeamId = mm.AwayTeamId then team_goals_before_80 end),0) as AwayTeamGoalsBefore80min,
                         coalesce(max (team_goals_before_80 ),0) as MatchGoalsBefore80min,
                         pp.HomeTeamPossession as home_team_possession_avg,
                         pp.AwayTeamPossession as away_team_possession_avg
 
-                        from matches mm 
+                        from matches mm
                         left join goals gg on gg.MatchId = mm.MatchId
                         left join corners cc on cc.MatchId = mm.MatchId
                         left join shots_on son on son.MatchId = mm.MatchId
@@ -143,7 +144,6 @@ def get_match_features(match):
                         left join goals_before_80 g80 on g80.MatchId = mm.MatchId
                         left join possession pp on pp.MatchId = mm.matchid
                         --Before data
-                        where mm.date > CONVERT(DATETIME, '{}', 121)
                         group by mm.Date,
                         mm.MatchId,
                         mm.HomeTeamId,
@@ -153,13 +153,18 @@ def get_match_features(match):
                         pp.HomeTeamPossession,
                         pp.AwayTeamPossession)
         select t.*,
-        case 
+        case
             when HomeTeamGoals > AwayTeamGoals then 'H'
             when HomeTeamGoals = AwayTeamGoals then 'D'
             when HomeTeamGoals < AwayTeamGoals then 'A'
             end as match_result
         from match_stats t
     """
+    # print(query.format(
+    #         "6", 
+    #         "HomeTeamId =" + str(match.HomeTeamId), 
+    #         "", 
+    #         match.Date))
     df_previous_matches = pd.read_sql(query.format(
             "6", 
             "HomeTeamId =" + str(match.HomeTeamId), 
@@ -179,7 +184,8 @@ def get_match_features(match):
     df_previous_matches = pd.read_sql(query.format(
             "6",
             "",
-            "HomeTeamId = " + str(match.HomeTeamId) + "and AwayTeamId = " + str(match.AwayTeamId) + " or HomeTeamId = " + str(match.AwayTeamId) + "and AwayTeamId = " + str(match.HomeTeamId), 
+            "(HomeTeamId = " + str(match.HomeTeamId) + "AND AwayTeamId = " + str(match.AwayTeamId) + ")" +
+            " OR (HomeTeamId = " + str(match.AwayTeamId) + "AND AwayTeamId = " + str(match.HomeTeamId) + ")", 
             match.Date)
         ,conn)
     print(df_previous_matches.shape)

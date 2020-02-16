@@ -28,13 +28,11 @@ df_matches.drop_duplicates(['MatchId'], inplace=True)
 df_matches['Date']=pd.to_datetime(df_matches['Date'])
 print(df_matches.shape)
 
-
-
 # Get last x matches of home and away team
 def get_match_features(match):
     ''' Create match features for a given match. '''
     home_away = pd.DataFrame()
-
+    print(match.Date)
     df_previous_matchs = pd.read_sql("""
         /****** Script for SelectTopNRows command from SSMS  ******/
         with goals as  
@@ -96,7 +94,7 @@ def get_match_features(match):
 
                     matches as (
                         -- Top N matches 
-                        SELECT top 30	 
+                        SELECT top {}	 
                             [MatchId]
                             ,[Date]
                             ,[HomeTeamId]
@@ -105,7 +103,7 @@ def get_match_features(match):
                             ,[AwayTeamFullName]
                         FROM [FootballData].[ENETSCORES].[Matches] m
                         -- Id parameter for home or away
-                        where HomeTeamId = 10252 
+                        where HomeTeamId = {} 
                         order by date desc),
 
                     match_stats as (
@@ -141,7 +139,7 @@ def get_match_features(match):
                         left join goals_before_80 g80 on g80.MatchId = mm.MatchId
                         left join possession pp on pp.MatchId = mm.matchid
                         --Before data
-                        where mm.Date <  '2016-04-30 10:00:00.000'
+                        where mm.Date <  '2016-04-30 10:00:00'
                         group by mm.Date,
                         mm.MatchId,
                         mm.HomeTeamId,
@@ -157,7 +155,7 @@ def get_match_features(match):
             when HomeTeamGoals < AwayTeamGoals then 'A'
             end as match_result
         from match_stats t
-    """,conn)
+    """.format("10", match.HomeTeamId),conn)
     #df_matches['Date']=pd.to_datetime(df_matches['Date'])
     print(df_previous_matchs.shape)
     #print(str(match) )

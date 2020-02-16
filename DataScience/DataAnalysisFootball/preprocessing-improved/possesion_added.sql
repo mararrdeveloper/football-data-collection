@@ -68,6 +68,8 @@ with goals as
                 ,[Date]
                 ,[HomeTeamId]
                 ,[AwayTeamId]
+				,[HomeTeamFullName]
+				,[AwayTeamFullName]
             FROM [FootballData].[ENETSCORES].[Matches] m
             -- Id parameter for home or away
             where HomeTeamId = 10252 
@@ -77,6 +79,8 @@ with goals as
             match_stats as (
             select 
             mm.MatchId,
+			mm.HomeTeamFullName,
+			mm.AwayTeamFullName,
             mm.HomeTeamId,
             mm.AwayTeamId,
             mm.date,
@@ -116,6 +120,8 @@ with goals as
             mm.MatchId,
             mm.HomeTeamId,
             mm.AwayTeamId,
+			mm.HomeTeamFullName,
+			mm.AwayTeamFullName,
             pp.HomeTeamPossession,
             pp.AwayTeamPossession
             )

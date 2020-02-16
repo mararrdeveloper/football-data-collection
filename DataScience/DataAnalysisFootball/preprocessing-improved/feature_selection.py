@@ -20,7 +20,8 @@ stmt = """SELECT
       ,[Date]
       ,[Season]
       ,[Stage]
-FROM  [FootballData].[ENETSCORES].[Matches]"""
+FROM  [FootballData].[ENETSCORES].[Matches]
+where Date >  '2016-01-01 15:00:00'"""
 
 # Excute Query here
 df_matches = pd.read_sql(stmt,conn)

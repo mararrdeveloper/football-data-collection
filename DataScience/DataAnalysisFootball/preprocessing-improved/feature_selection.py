@@ -21,7 +21,7 @@ stmt = """SELECT
       ,[Season]
       ,[Stage]
 FROM  [FootballData].[ENETSCORES].[Matches]
-where Date >  '2016-01-01 15:00:00'"""
+where Date >  '2016-07-07 15:00:00'"""
 
 # Excute Query here
 df_matches = pd.read_sql(stmt,conn)
@@ -140,7 +140,7 @@ def get_match_features(match):
                         left join goals_before_80 g80 on g80.MatchId = mm.MatchId
                         left join possession pp on pp.MatchId = mm.matchid
                         --Before data
-                        where mm.Date <  '2016-04-30 10:00:00'
+                        --where mm.Date <  CONVERT(DATETIME, '{}', 102)
                         group by mm.Date,
                         mm.MatchId,
                         mm.HomeTeamId,
@@ -156,7 +156,7 @@ def get_match_features(match):
             when HomeTeamGoals < AwayTeamGoals then 'A'
             end as match_result
         from match_stats t
-    """.format("10", match.HomeTeamId),conn)
+    """.format("10", match.HomeTeamId, match.Date),conn)
     #df_matches['Date']=pd.to_datetime(df_matches['Date'])
     print(df_previous_matchs.shape)
     #print(str(match) )

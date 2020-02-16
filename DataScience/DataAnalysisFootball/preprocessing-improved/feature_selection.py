@@ -21,7 +21,9 @@ stmt = """SELECT
       ,[Season]
       ,[Stage]
 FROM  [FootballData].[ENETSCORES].[Matches]
-where Date >  '2016-07-07 15:00:00'"""
+where Date >  '2017-01-05 15:00:00'
+and League = 'Premier League'
+"""
 
 # Excute Query here
 df_matches = pd.read_sql(stmt,conn)
@@ -34,7 +36,7 @@ def get_match_features(match):
     ''' Create match features for a given match. '''
     home_away = pd.DataFrame()
     print(match.Date)
-    df_previous_matchs = pd.read_sql("""
+    query = """
         /****** Script for SelectTopNRows command from SSMS  ******/
         with goals as  
             (SELECT
@@ -104,7 +106,8 @@ def get_match_features(match):
                             ,[AwayTeamFullName]
                         FROM [FootballData].[ENETSCORES].[Matches] m
                         -- Id parameter for home or away
-                        where HomeTeamId = {} 
+                        where {}
+                        {}
                         order by date desc),
 
                     match_stats as (
@@ -140,7 +143,7 @@ def get_match_features(match):
                         left join goals_before_80 g80 on g80.MatchId = mm.MatchId
                         left join possession pp on pp.MatchId = mm.matchid
                         --Before data
-                        where mm.Date > CONVERT(DATETIME, '{}', 102)
+                        where mm.date > CONVERT(DATETIME, '{}', 121)
                         group by mm.Date,
                         mm.MatchId,
                         mm.HomeTeamId,
@@ -156,10 +159,31 @@ def get_match_features(match):
             when HomeTeamGoals < AwayTeamGoals then 'A'
             end as match_result
         from match_stats t
-    """.format("6", match.HomeTeamId, match.Date),conn)
-    #df_matches['Date']=pd.to_datetime(df_matches['Date'])
-    print(df_previous_matchs.shape)
-    #print(str(match) )
+    """
+    df_previous_matches = pd.read_sql(query.format(
+            "6", 
+            "HomeTeamId =" + str(match.HomeTeamId), 
+            "", 
+            match.Date)
+        ,conn)
+    print(df_previous_matches.shape)
+
+    df_previous_matches = pd.read_sql(query.format(
+            "6",
+            "AwayTeamId = " +  str(match.AwayTeamId), 
+            "", 
+            match.Date)
+         ,conn)
+    print(df_previous_matches.shape)
+
+    df_previous_matches = pd.read_sql(query.format(
+            "6",
+            "",
+            "HomeTeamId = " + str(match.HomeTeamId) + "and AwayTeamId = " + str(match.AwayTeamId) + " or HomeTeamId = " + str(match.AwayTeamId) + "and AwayTeamId = " + str(match.HomeTeamId), 
+            match.Date)
+        ,conn)
+    print(df_previous_matches.shape)
+
 
     # matches_home_team_home_1 = get_matches_team(match.Date, home_team_name, 1, True) 
     # home_team_home_1 = process_matches_average(matches_home_team_home_1, home_team_name)

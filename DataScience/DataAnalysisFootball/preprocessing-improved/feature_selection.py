@@ -76,6 +76,7 @@ def get_match_features(match):
     print(df_previous_matches_direct.shape)
 
     data=[
+        match.HomeTeamId,
         df_previous_matches_home_sum, 
         df_previous_matches_away_sum,
         df_previous_matches_direct_sum,
@@ -97,6 +98,7 @@ def get_match_features(match):
     home_away=pd.DataFrame(data)
     home_away=home_away.transpose()
     home_away.columns=np.hstack([
+        'HomeTeamId',
         'home_'+ df_previous_matches_home.columns,
         'away_'+ df_previous_matches_away.columns,
         'direct_'+ df_previous_matches_direct.columns,
@@ -104,16 +106,10 @@ def get_match_features(match):
     #     'home_away_3_'+ home_team_away_3.columns,
     #     'home_away_6_'+ home_team_away_6.columns,
     #     'home_direct_'+ home_team_direct.columns,
-    #     'away_away_1_'+ away_team_away_1.columns,
-    #     'away_away_3_'+ away_team_away_3.columns,
-    #     'away_away_6_'+ away_team_away_6.columns,
-    #     'away_home_1_'+ away_team_home_1.columns,
-    #     'away_home_3_'+ away_team_home_3.columns,
-    #     'away_home_6_'+ away_team_home_6.columns,
-    #     'away_direct_'+ away_team_direct.columns
     ])
-    print(home_away.shape)
-    #alldata = []
+    print(home_away.columns)
+    
+    all_ata = []
     #concat = pd.concat([matches_to_predict, matches_to_predict_with_stats], axis=1)[matches_to_predict.columns.tolist() + matches_to_predict_with_stats.columns.tolist()]
     #alldata.append(concat)
     #data=pd.concat(alldata,axis=0)
@@ -123,7 +119,7 @@ def get_match_features(match):
     #print(df_previous_matches.columns)
     #sum = df_previous_matches.sum()
 
-    #return None #home_away.iloc[0]
+    return home_away.iloc[0]
 
 def process_matches_average(matches):
   
@@ -134,7 +130,7 @@ def process_matches_average(matches):
 
 #matches_with_odds['Date']=pd.to_datetime(matches_with_odds['Date'])
 match_features = df_matches.apply(lambda x: get_match_features(x), axis = 1)
-
+print(match_features.head())
 # preprocess()
 
 # def preprocess():

@@ -2,6 +2,8 @@ import pymssql
 import pandas as pd
 import pyodbc
 import numpy as np
+from sklearn import preprocessing
+from sklearn.preprocessing import StandardScaler
 from random import random
 from sql.sql_statements import select_matches_with_targets, match_aggregated_stats
 #DB Connection 
@@ -16,73 +18,88 @@ df_matches.drop_duplicates(['MatchId'], inplace=True)
 df_matches['Date']=pd.to_datetime(df_matches['Date'])
 print(df_matches.shape)
 
+custom_lables = ['H', 'A', 'D']
+print(custom_lables)
+
+le = preprocessing.LabelEncoder()
+
+def transform_columns(df_matches):
+    for column in df_matches.columns:
+        if df_matches[column].dtype != np.number:
+            print(column + ' not a number')
+            df_matches[column] = le.fit_transform(df_matches[column].astype(str)).astype('int32')
+            print(df_matches[column])
+            #print(set(s3_train_data_filtered[column]))
+        else:
+            print(column + " a number")
+            df_matches[column] = df_matches[column].astype(np.float32)
+
+
 # Get last x matches of home and away team
 def get_match_features(match):
     ''' Create match features for a given match. '''
     print("{} {}".format(match.Date, match.match_result))
-    #home_away = pd.DataFrame()
 
-    df_previous_matches = pd.read_sql(
+    df_previous_matches_home = pd.read_sql(
         match_aggregated_stats.format(
             "6", 
             "HomeTeamId =" + str(match.HomeTeamId), 
             "", 
             match.Date)
         ,conn)
-    #print(df_previous_matches.columns)
-    
-    sum = df_previous_matches.sum()
-    print(df_previous_matches.head())
+    df_previous_matches_home.drop(['MatchId','HomeTeamFullName','AwayTeamFullName','HomeTeamId','AwayTeamId','match_result','date'],axis =1,inplace=True)
+    print(df_previous_matches_home.shape)
 
-    df_previous_matches = pd.read_sql(
+    df_previous_matches_home_sum=process_matches_average(df_previous_matches_home)
+    df_previous_matches_away = pd.read_sql(
         match_aggregated_stats.format(
             "6",
             "AwayTeamId = " +  str(match.AwayTeamId), 
             "", 
             match.Date)
          ,conn)
-    print(df_previous_matches.shape)
+    print(df_previous_matches_away.shape)
 
-    df_previous_matches = pd.read_sql(match_aggregated_stats.format(
+    df_previous_matches_away.drop(['MatchId','HomeTeamFullName','AwayTeamFullName','HomeTeamId','AwayTeamId','match_result','date'],axis =1,inplace=True)
+    df_previous_matches_away_sum=process_matches_average(df_previous_matches_away)
+
+    df_previous_matches_direct = pd.read_sql(match_aggregated_stats.format(
             "6",
             "",
-            "(HomeTeamId = " + str(match.HomeTeamId) + "AND AwayTeamId = " + str(match.AwayTeamId) + ")" +
-            " OR (HomeTeamId = " + str(match.AwayTeamId) + "AND AwayTeamId = " + str(match.HomeTeamId) + ")", 
+            "(HomeTeamId = " + str(match.HomeTeamId) + "AND AwayTeamId = " + str(match.AwayTeamId) + ")",
+            #" OR (HomeTeamId = " + str(match.AwayTeamId) + "AND AwayTeamId = " + str(match.HomeTeamId) + ")", 
             match.Date)
         ,conn)
-    print(df_previous_matches.shape)
 
-    # matches_away_team_home_6 = get_matches_team(match.Date, away_team_name, 6, True)
-    # away_team_home_6 = process_matches_average(matches_away_team_home_6, away_team_name)
+    df_previous_matches_direct.drop(['MatchId','HomeTeamFullName','AwayTeamFullName','HomeTeamId','AwayTeamId','match_result','date'],axis =1,inplace=True)
+    df_previous_matches_direct_sum=process_matches_average(df_previous_matches_direct)
+    print(df_previous_matches_direct.shape)
 
-    # direct_matches = get_last_direct_matches(match.Date, home_team_name, away_team_name, 6)
+    data=[
+        df_previous_matches_home_sum, 
+        df_previous_matches_away_sum,
+        df_previous_matches_direct_sum,
+        # home_team_home_6.loc['average'],
+        # home_team_away_1.loc['average'], 
+        # home_team_away_3.loc['average'],
+        # home_team_away_6.loc['average'],
+        # home_team_direct.loc['average'],
+        # away_team_away_1.loc['average'],
+        # away_team_away_3.loc['average'],
+        # away_team_away_6.loc['average'],
+        # away_team_home_1.loc['average'],
+        # away_team_home_3.loc['average'],
+        # away_team_home_6.loc['average'],
+        # away_team_direct.loc['average']
+        ]
     
-    # home_team_direct = process_matches_average(direct_matches, home_team_name)
-    # away_team_direct = process_matches_average(direct_matches, away_team_name)
-
-    # data=[
-    #     home_team_home_1.loc['average'], 
-    #     home_team_home_3.loc['average'],
-    #     home_team_home_6.loc['average'],
-    #     home_team_away_1.loc['average'], 
-    #     home_team_away_3.loc['average'],
-    #     home_team_away_6.loc['average'],
-    #     home_team_direct.loc['average'],
-    #     away_team_away_1.loc['average'],
-    #     away_team_away_3.loc['average'],
-    #     away_team_away_6.loc['average'],
-    #     away_team_home_1.loc['average'],
-    #     away_team_home_3.loc['average'],
-    #     away_team_home_6.loc['average'],
-    #     away_team_direct.loc['average']]
-    
-    # data=np.hstack(data)
-    # home_away=pd.DataFrame(data)
-    # home_away=home_away.transpose()
-    # home_away.columns=np.hstack([
-    #     'home_home_1_'+ home_team_home_1.columns,
-    #     'home_home_3_'+ home_team_home_3.columns,
-    #     'home_home_6_'+ home_team_home_6.columns,
+    data=np.hstack(data)
+    home_away=pd.DataFrame(data)
+    home_away=home_away.transpose()
+    home_away.columns=np.hstack([
+        'home_'+ df_previous_matches_home.columns,
+        'away_'+ df_previous_matches_away.columns,
+        'direct_'+ df_previous_matches_direct.columns,
     #     'home_away_1_'+ home_team_away_1.columns,
     #     'home_away_3_'+ home_team_away_3.columns,
     #     'home_away_6_'+ home_team_away_6.columns,
@@ -94,9 +111,26 @@ def get_match_features(match):
     #     'away_home_3_'+ away_team_home_3.columns,
     #     'away_home_6_'+ away_team_home_6.columns,
     #     'away_direct_'+ away_team_direct.columns
-    #     ])
-    
-    return None #home_away.iloc[0]
+    ])
+    print(home_away.shape)
+    #alldata = []
+    #concat = pd.concat([matches_to_predict, matches_to_predict_with_stats], axis=1)[matches_to_predict.columns.tolist() + matches_to_predict_with_stats.columns.tolist()]
+    #alldata.append(concat)
+    #data=pd.concat(alldata,axis=0)
+    #data['IsTraining'] = False
+
+    #transform_columns(df_previous_matches)
+    #print(df_previous_matches.columns)
+    #sum = df_previous_matches.sum()
+
+    #return None #home_away.iloc[0]
+
+def process_matches_average(matches):
+  
+    #matches["home_team_possession_avg"] = matches["home_team_possession_avg"].mean()
+    return matches.mean(axis = 0, skipna = True)
+
+   
 
 #matches_with_odds['Date']=pd.to_datetime(matches_with_odds['Date'])
 match_features = df_matches.apply(lambda x: get_match_features(x), axis = 1)
@@ -105,21 +139,15 @@ match_features = df_matches.apply(lambda x: get_match_features(x), axis = 1)
 
 # def preprocess():
 #     alldata=[]
-#     for f in season_years:
-#         matches_with_odds = pd.read_csv(data_folder + str(f)+'.csv')
-
-#         matches_with_odds
 
 #         alldata.append(pd.concat([matches_with_odds, match_stats], axis=1))
 
 #     data=pd.concat(alldata,axis=0)
-
-#     data['IsTraining'] = True
-#     data['BothToScore'] = ((data['FTHG'] > 0) & (data['FTAG'] > 0))
-#     data['GoalFirstHalf'] = ((data['HTHG'] > 0) | (data['HTAG'] > 0))
-#     data['SHHG'] =  (data['FTHG'] - data['HTHG'])
-#     data['SHAG'] =  (data['FTAG'] - data['HTAG'] )
-#     data['GoalSecondHalf'] = ((data['SHHG'] > 0) | (data['SHAG'] > 0))
+#     data['BothToScore'] 
+#     data['GoalFirstHalf'] 
+#     data['SHHG']
+#     data['SHAG'] 
+#     data['GoalSecondHalf']
     
 #     data.to_csv(data_folder + '/data.csv',index=False)
 
@@ -137,45 +165,7 @@ match_features = df_matches.apply(lambda x: get_match_features(x), axis = 1)
 #     data = previous_data.append(data)
 #     data.to_csv(data_folder + 'processed/features_0.csv',index=False)
 
-# 
-# def get_matches_team(date, team, last_n, is_home):
-#     ''' Get the last x matches of a given team. '''
-#     #Filter team matches from matches
-#     if is_home:
-#         team_matches = df_matches[(df_matches['HomeTeam'] == team)].drop_duplicates(['ExternalId'])
-#     else:
-#         team_matches = df_matches[(df_matches['AwayTeam'] == team)].drop_duplicates(['ExternalId'])
-        
-#     team_matches['ExternalId'] = team_matches['ExternalId'].astype(int)
 
-#     last_matches = get_last_n_matches(team_matches, date, last_n)
-
-#     if len(last_matches) == 0:
-#         print("No matches for " + team)
-#     return last_matches
-
-# def get_last_n_matches(team_matches, date, last_n):
-#     last_matches = team_matches[team_matches.Date <= date].sort_values(by = 'Date', ascending = False).iloc[0:last_n,:] 
-#     return last_matches
-
-
-# def process_matches_average(matches, team_name):
-#     home_team_data = pd.DataFrame(index=['average'])
-#     for index, row in matches.iterrows():
-#         match_id = row['ExternalId']
-#         is_home = True if row['HomeTeam'] == team_name else False
-
-#         home_team_id = row['HomeTeamId']
-#         away_team_id = row['AwayTeamId']
-#         #print(home_team_id + " " + away_team_id)
-
-#         home_team_match_data = get_team_features(match_id, home_team_id, is_home)
-#         home_team_data = home_team_data.append(home_team_match_data)
-#         #print(home_team_data.head())
-#     if len(home_team_data) > 0:
-#         home_team_data.loc['average'] = home_team_data.sum()
-
-#     return home_team_data
 
 # def get_team_features(match_id, team_id, is_home):
 #     result = pd.DataFrame()

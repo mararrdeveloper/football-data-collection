@@ -37,6 +37,7 @@ def transform_columns(df_matches):
 
 # Get last x matches of home and away team
 def get_match_features(match):
+    #print(match)
     ''' Create match features for a given match. '''
     print("{} {}".format(match.Date, match.match_result))
 
@@ -76,7 +77,9 @@ def get_match_features(match):
     print(df_previous_matches_direct.shape)
 
     data=[
-        match.HomeTeamId,
+        match.match_result,
+        match.HomeTeamFullName,
+        match.AwayTeamFullname,
         df_previous_matches_home_sum, 
         df_previous_matches_away_sum,
         df_previous_matches_direct_sum,
@@ -98,7 +101,9 @@ def get_match_features(match):
     home_away=pd.DataFrame(data)
     home_away=home_away.transpose()
     home_away.columns=np.hstack([
-        'HomeTeamId',
+        'FTR',
+        'HomeTeam',
+        'AwayTeam',
         'home_'+ df_previous_matches_home.columns,
         'away_'+ df_previous_matches_away.columns,
         'direct_'+ df_previous_matches_direct.columns,
@@ -109,13 +114,11 @@ def get_match_features(match):
     ])
     print(home_away.columns)
     
-    all_ata = []
     #concat = pd.concat([matches_to_predict, matches_to_predict_with_stats], axis=1)[matches_to_predict.columns.tolist() + matches_to_predict_with_stats.columns.tolist()]
     #alldata.append(concat)
     #data=pd.concat(alldata,axis=0)
-    #data['IsTraining'] = False
 
-    #transform_columns(df_previous_matches)
+    
     #print(df_previous_matches.columns)
     #sum = df_previous_matches.sum()
 
@@ -130,7 +133,9 @@ def process_matches_average(matches):
 
 #matches_with_odds['Date']=pd.to_datetime(matches_with_odds['Date'])
 match_features = df_matches.apply(lambda x: get_match_features(x), axis = 1)
+#transform_columns(match_features)
 print(match_features.head())
+match_features.to_csv('output/features.csv',index=False)
 # preprocess()
 
 # def preprocess():

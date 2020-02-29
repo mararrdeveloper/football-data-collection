@@ -5,6 +5,7 @@ import numpy as np
 from sklearn import preprocessing
 from sklearn.preprocessing import StandardScaler
 from random import random
+import datetime
 from sql.sql_statements import select_matches_with_targets, match_aggregated_stats
 #DB Connection 
 conn = pyodbc.connect("Driver={SQL Server Native Client 11.0};"
@@ -16,10 +17,14 @@ conn = pyodbc.connect("Driver={SQL Server Native Client 11.0};"
 df_matches = pd.read_sql(select_matches_with_targets,conn)
 df_matches.drop_duplicates(['MatchId'], inplace=True)
 df_matches['Date']=pd.to_datetime(df_matches['Date'])
-print(df_matches.shape)
+#df_matches['day'] = df_matches['Date'].dt.day
+#df_matches['month'] = df_matches['Date'].dt.month
+#df_matches['year'] = df_matches['Date'].dt.year
+#df_matches['dayofweek'] = df_matches['Date'].dt.dayofweek
+#df_matches['daysago'] = (datetime.datetime.today() - df_matches['Date']).dt.days
 
-custom_lables = ['H', 'A', 'D']
-print(custom_lables)
+print(df_matches.shape)
+print(df_matches.head(5))
 
 le = preprocessing.LabelEncoder()
 
@@ -78,11 +83,17 @@ def get_match_features(match):
 
     data=[
         match.match_result,
+        match.Date,
         match.HomeTeamFullName,
-        match.AwayTeamFullname,
+        match.AwayTeamFullname,       
+    
         df_previous_matches_home_sum, 
         df_previous_matches_away_sum,
-        df_previous_matches_direct_sum,
+        df_previous_matches_direct_sum,    # match.day,
+        # match.month,
+        # match.year,
+        # match.dayofweek,
+        # match.daysago,
         # home_team_home_6.loc['average'],
         # home_team_away_1.loc['average'], 
         # home_team_away_3.loc['average'],
@@ -102,8 +113,14 @@ def get_match_features(match):
     home_away=home_away.transpose()
     home_away.columns=np.hstack([
         'FTR',
+        'Date',
         'HomeTeam',
         'AwayTeam',
+        # 'day',
+        # 'month',
+        # 'year',
+        # 'dayofweek',
+        # 'daysago',
         'home_'+ df_previous_matches_home.columns,
         'away_'+ df_previous_matches_away.columns,
         'direct_'+ df_previous_matches_direct.columns,
@@ -112,7 +129,7 @@ def get_match_features(match):
     #     'home_away_6_'+ home_team_away_6.columns,
     #     'home_direct_'+ home_team_direct.columns,
     ])
-    print(home_away.columns)
+    #print(home_away.columns)
     
     #concat = pd.concat([matches_to_predict, matches_to_predict_with_stats], axis=1)[matches_to_predict.columns.tolist() + matches_to_predict_with_stats.columns.tolist()]
     #alldata.append(concat)
@@ -135,7 +152,7 @@ def process_matches_average(matches):
 match_features = df_matches.apply(lambda x: get_match_features(x), axis = 1)
 #transform_columns(match_features)
 print(match_features.head())
-match_features.to_csv('output/features.csv',index=False)
+match_features.to_csv('output/features1.csv',index=False)
 # preprocess()
 
 # def preprocess():

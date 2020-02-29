@@ -11,8 +11,9 @@ SELECT
       ,[Season]
       ,[Stage]
 FROM  [FootballData].[ENETSCORES].[Matches]
-where Date >  '2017-01-05 15:00:00'
-and League = 'Premier League'),
+where
+ --Date >  '2018-08-01 15:00:00' and
+ League = 'Premier League'),
 goals_before_80 as
     (SELECT
         [MatchId]

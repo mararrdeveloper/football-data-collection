@@ -86,26 +86,14 @@ def get_match_features(match):
         match.Date,
         match.HomeTeamFullName,
         match.AwayTeamFullname,       
-    
-        df_previous_matches_home_sum, 
-        df_previous_matches_away_sum,
-        df_previous_matches_direct_sum,    # match.day,
+        # match.day,
         # match.month,
         # match.year,
         # match.dayofweek,
         # match.daysago,
-        # home_team_home_6.loc['average'],
-        # home_team_away_1.loc['average'], 
-        # home_team_away_3.loc['average'],
-        # home_team_away_6.loc['average'],
-        # home_team_direct.loc['average'],
-        # away_team_away_1.loc['average'],
-        # away_team_away_3.loc['average'],
-        # away_team_away_6.loc['average'],
-        # away_team_home_1.loc['average'],
-        # away_team_home_3.loc['average'],
-        # away_team_home_6.loc['average'],
-        # away_team_direct.loc['average']
+        df_previous_matches_home_sum, 
+        df_previous_matches_away_sum,
+        df_previous_matches_direct_sum,    
         ]
     
     data=np.hstack(data)
@@ -124,10 +112,6 @@ def get_match_features(match):
         'home_'+ df_previous_matches_home.columns,
         'away_'+ df_previous_matches_away.columns,
         'direct_'+ df_previous_matches_direct.columns,
-    #     'home_away_1_'+ home_team_away_1.columns,
-    #     'home_away_3_'+ home_team_away_3.columns,
-    #     'home_away_6_'+ home_team_away_6.columns,
-    #     'home_direct_'+ home_team_direct.columns,
     ])
     #print(home_away.columns)
     

@@ -3,7 +3,7 @@ import json
 import sys
 from footballData.items import Match
 import platform
-
+### Google .mx.enetscores.com ! ! !
 class MatchSpider(scrapy.Spider):
     #increase maximum open files
     if platform.system() == 'Windows':
@@ -13,8 +13,8 @@ class MatchSpider(scrapy.Spider):
     name="match"
 
     def __init__(self):
-        self.seasons_selected = ['2018/2019']
-        self.countries_selected = ['England', 'Germany', 'Spain', 'Italy', 'France']
+        self.seasons_selected = ['2015/2016','2016/2017','2017/2018','2018/2019','2019/2020']
+        self.countries_selected = ['England']#, 'Germany', 'Spain', 'Italy', 'France']
         self.leagues_selected = ['Premier League', 'Primera Division', '1. Bundesliga', 'Serie A', 'Ligue 1']
 
         #allowed_domains = ["reuters.mx-api.enetscores.com", 'json.mx-api.enetscores.com']

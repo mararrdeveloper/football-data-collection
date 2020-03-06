@@ -38,23 +38,25 @@ def transform_columns(df_matches):
         else:
             print(column + " a number")
             df_matches[column] = df_matches[column].astype(np.float32)
+def drop_columns(matches):
+    matches.drop(['MatchId','HomeTeamFullName','AwayTeamFullName','HomeTeamId','AwayTeamId','match_result','date'],axis =1,inplace=True)
 
 def get_match_features(match):
     ''' Create match features for a given match. '''
     print("{} {}".format(match.Date, match.match_result))
 
     df_previous_matches_home = pd.read_sql(last_matches_home_query(match.HomeTeamId, match.Date),conn)
-    df_previous_matches_home.drop(['MatchId','HomeTeamFullName','AwayTeamFullName','HomeTeamId','AwayTeamId','match_result','date'],axis =1,inplace=True)
+    drop_columns(df_previous_matches_home)
     print(df_previous_matches_home.shape)
     df_previous_matches_home_agg=process_matches_average(df_previous_matches_home)
 
     df_previous_matches_away = pd.read_sql(last_matches_away_query(match.AwayTeamId, match.Date),conn)
-    df_previous_matches_away.drop(['MatchId','HomeTeamFullName','AwayTeamFullName','HomeTeamId','AwayTeamId','match_result','date'],axis =1,inplace=True)
+    drop_columns(df_previous_matches_away)
     print(df_previous_matches_away.shape)
     df_previous_matches_away_sum=process_matches_average(df_previous_matches_away)
 
     df_previous_matches_direct_home = pd.read_sql(last_direct_home_query(match.HomeTeamId, match.AwayTeamId, match.Date) ,conn)
-    df_previous_matches_direct_home.drop(['MatchId','HomeTeamFullName','AwayTeamFullName','HomeTeamId','AwayTeamId','match_result','date'],axis =1,inplace=True)
+    drop_columns(df_previous_matches_direct_home)
     print(df_previous_matches_direct_home.shape)
     df_previous_matches_direct_agg=process_matches_average(df_previous_matches_direct_home)
     
@@ -100,4 +102,4 @@ def process_matches_average(matches):
 
 match_features = df_matches.apply(lambda x: get_match_features(x), axis = 1)
 print(match_features.head())
-match_features.to_csv('output/features1.csv',index=False)
+match_features.to_csv('output/features2.csv',index=False)

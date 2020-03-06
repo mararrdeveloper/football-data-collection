@@ -39,31 +39,27 @@ def transform_columns(df_matches):
             print(column + " a number")
             df_matches[column] = df_matches[column].astype(np.float32)
 
-
-# Get last x matches of home and away team
 def get_match_features(match):
-    #print(match)
     ''' Create match features for a given match. '''
     print("{} {}".format(match.Date, match.match_result))
 
     df_previous_matches_home = pd.read_sql(last_matches_home_query(match.HomeTeamId, match.Date),conn)
     df_previous_matches_home.drop(['MatchId','HomeTeamFullName','AwayTeamFullName','HomeTeamId','AwayTeamId','match_result','date'],axis =1,inplace=True)
     print(df_previous_matches_home.shape)
-
-    df_previous_matches_home_sum=process_matches_average(df_previous_matches_home)
+    df_previous_matches_home_agg=process_matches_average(df_previous_matches_home)
 
     df_previous_matches_away = pd.read_sql(last_matches_away_query(match.AwayTeamId, match.Date),conn)
-    print(df_previous_matches_away.shape)
-
     df_previous_matches_away.drop(['MatchId','HomeTeamFullName','AwayTeamFullName','HomeTeamId','AwayTeamId','match_result','date'],axis =1,inplace=True)
+    print(df_previous_matches_away.shape)
     df_previous_matches_away_sum=process_matches_average(df_previous_matches_away)
-    df_previous_matches_direct_home = pd.read_sql(last_direct_home_query(match.HomeTeamId, match.AwayTeamId, match.Date) ,conn)
 
+    df_previous_matches_direct_home = pd.read_sql(last_direct_home_query(match.HomeTeamId, match.AwayTeamId, match.Date) ,conn)
     df_previous_matches_direct_home.drop(['MatchId','HomeTeamFullName','AwayTeamFullName','HomeTeamId','AwayTeamId','match_result','date'],axis =1,inplace=True)
-    df_previous_matches_direct_sum=process_matches_average(df_previous_matches_direct_home)
     print(df_previous_matches_direct_home.shape)
-#         match_possession_for = df_possessions[(df_possessions['MatchId'] == match_id)]['HomePossession']
-#         result.loc[0, 'team_possession'] = np.mean(match_possession_for)
+    df_previous_matches_direct_agg=process_matches_average(df_previous_matches_direct_home)
+    
+    #match_possession_for = df_possessions[(df_possessions['MatchId'] == match_id)]['HomePossession']
+    #result.loc[0, 'team_possession'] = np.mean(match_possession_for)
     data=[
         match.match_result,
         match.Date,
@@ -74,9 +70,9 @@ def get_match_features(match):
         # match.year,
         # match.dayofweek,
         # match.daysago,
-        df_previous_matches_home_sum, 
+        df_previous_matches_home_agg, 
         df_previous_matches_away_sum,
-        df_previous_matches_direct_sum,    
+        df_previous_matches_direct_agg,    
         ]
     
     data=np.hstack(data)
@@ -96,11 +92,9 @@ def get_match_features(match):
         'away_'+ df_previous_matches_away.columns,
         'direct_'+ df_previous_matches_direct_home.columns,
     ])
-
     return home_away.iloc[0]
 
 def process_matches_average(matches):
-  
     #matches["home_team_possession_avg"] = matches["home_team_possession_avg"].mean()
     return matches.mean(axis = 0, skipna = True)
 

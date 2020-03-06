@@ -6,7 +6,7 @@ from sklearn import preprocessing
 from sklearn.preprocessing import StandardScaler
 from random import random
 import datetime
-from sql.sql_statements import select_matches_with_targets, match_aggregated_stats
+from sql.sql_statements import select_matches_with_targets, match_aggregated_stats, last_matches_home_query, last_matches_away_query, last_direct_home_query
 #DB Connection 
 conn = pyodbc.connect("Driver={SQL Server Native Client 11.0};"
                      "Server=Martin-PC\SQLEXPRESS;"
@@ -46,36 +46,18 @@ def get_match_features(match):
     ''' Create match features for a given match. '''
     print("{} {}".format(match.Date, match.match_result))
 
-    df_previous_matches_home = pd.read_sql(
-        match_aggregated_stats.format(
-            "6", 
-            "HomeTeamId =" + str(match.HomeTeamId), 
-            "", 
-            match.Date)
-        ,conn)
+    df_previous_matches_home = pd.read_sql(last_matches_home_query(match.HomeTeamId, match.Date),conn)
     df_previous_matches_home.drop(['MatchId','HomeTeamFullName','AwayTeamFullName','HomeTeamId','AwayTeamId','match_result','date'],axis =1,inplace=True)
     print(df_previous_matches_home.shape)
 
     df_previous_matches_home_sum=process_matches_average(df_previous_matches_home)
-    df_previous_matches_away = pd.read_sql(
-        match_aggregated_stats.format(
-            "6",
-            "AwayTeamId = " +  str(match.AwayTeamId), 
-            "", 
-            match.Date)
-         ,conn)
+
+    df_previous_matches_away = pd.read_sql(last_matches_away_query(match.AwayTeamId, match.Date),conn)
     print(df_previous_matches_away.shape)
 
     df_previous_matches_away.drop(['MatchId','HomeTeamFullName','AwayTeamFullName','HomeTeamId','AwayTeamId','match_result','date'],axis =1,inplace=True)
     df_previous_matches_away_sum=process_matches_average(df_previous_matches_away)
-
-    df_previous_matches_direct_home = pd.read_sql(match_aggregated_stats.format(
-            "6",
-            "",
-            "(HomeTeamId = " + str(match.HomeTeamId) + "AND AwayTeamId = " + str(match.AwayTeamId) + ")",
-            #" OR (HomeTeamId = " + str(match.AwayTeamId) + "AND AwayTeamId = " + str(match.HomeTeamId) + ")", 
-            match.Date)
-        ,conn)
+    df_previous_matches_direct_home = pd.read_sql(last_direct_home_query(match.HomeTeamId, match.AwayTeamId, match.Date) ,conn)
 
     df_previous_matches_direct_home.drop(['MatchId','HomeTeamFullName','AwayTeamFullName','HomeTeamId','AwayTeamId','match_result','date'],axis =1,inplace=True)
     df_previous_matches_direct_sum=process_matches_average(df_previous_matches_direct_home)

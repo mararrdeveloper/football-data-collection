@@ -204,3 +204,24 @@ match_aggregated_stats="""
             end as match_result
         from match_stats t
     """
+def last_matches_home_query(homeTeamId, date):
+    return match_aggregated_stats.format(
+        "6", 
+        "HomeTeamId =" + str(homeTeamId), 
+        "", 
+        date)
+
+def last_matches_away_query(awayTeamId, date):
+    return match_aggregated_stats.format(
+        "6",
+        "AwayTeamId = " +  str(awayTeamId), 
+        "", 
+        date)
+
+def last_direct_home_query(homeTeamId, awayTeamId, date):
+    return  match_aggregated_stats.format(
+        "6",
+        "",
+        "(HomeTeamId = " + str(homeTeamId) + "AND AwayTeamId = " + str(awayTeamId) + ")",
+        #" OR (HomeTeamId = " + str(match.AwayTeamId) + "AND AwayTeamId = " + str(match.HomeTeamId) + ")", 
+        date)

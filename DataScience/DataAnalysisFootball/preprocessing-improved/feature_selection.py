@@ -39,28 +39,31 @@ le = preprocessing.LabelEncoder()
 #             print(column + " a number")
 #             df_matches[column] = df_matches[column].astype(np.float32)
 
-
-
 ''' Create match features for a given match. '''
 def get_match_features(match):
-    
     print("{} {}".format(match.Date, match.match_result))
 
     df_previous_matches_home = pd.read_sql(last_matches_home_query(match.HomeTeamId, match.Date),conn)
+    #print(df_previous_matches_home['date'])
     drop_columns(df_previous_matches_home)
-    print(df_previous_matches_home.shape)
     df_previous_matches_home_agg=process_matches_average(df_previous_matches_home)
+    print(df_previous_matches_home.shape)
 
     df_previous_matches_away = pd.read_sql(last_matches_away_query(match.AwayTeamId, match.Date),conn)
     drop_columns(df_previous_matches_away)
-    print(df_previous_matches_away.shape)
     df_previous_matches_away_agg=process_matches_average(df_previous_matches_away)
+    print(df_previous_matches_away.shape)
 
     df_previous_matches_direct_home = pd.read_sql(last_direct_home_query(match.HomeTeamId, match.AwayTeamId, match.Date) ,conn)
     drop_columns(df_previous_matches_direct_home)
+    df_previous_matches_direct_agg_home=process_matches_average(df_previous_matches_direct_home)
     print(df_previous_matches_direct_home.shape)
-    df_previous_matches_direct_agg=process_matches_average(df_previous_matches_direct_home)
-    
+
+    df_previous_matches_direct_away = pd.read_sql(last_direct_home_query(match.AwayTeamId, match.HomeTeamId, match.Date) ,conn)
+    drop_columns(df_previous_matches_direct_away)
+    df_previous_matches_direct_agg_away=process_matches_average(df_previous_matches_direct_away)
+    print(df_previous_matches_direct_away.shape)
+
     #result.loc[0, 'team_possession'] = np.mean(match_possession_for)
     data=[
         match.match_result,
@@ -78,9 +81,12 @@ def get_match_features(match):
         df_previous_matches_away_agg[0],
         df_previous_matches_away_agg[1],
         df_previous_matches_away_agg[2],
-        df_previous_matches_direct_agg[0],    
-        df_previous_matches_direct_agg[1],
-        df_previous_matches_direct_agg[2],
+        df_previous_matches_direct_agg_home[0],    
+        df_previous_matches_direct_agg_home[1],
+        df_previous_matches_direct_agg_home[2],
+        df_previous_matches_direct_agg_away[0],    
+        df_previous_matches_direct_agg_away[1],
+        df_previous_matches_direct_agg_away[2],
         ]
     
     data=np.hstack(data)
@@ -102,19 +108,26 @@ def get_match_features(match):
         'away1_'+ df_previous_matches_away.columns,
         'away3_'+ df_previous_matches_away.columns,
         'away6_'+ df_previous_matches_away.columns,
-        'direct1_'+ df_previous_matches_direct_home.columns,
-        'direct3_'+ df_previous_matches_direct_home.columns,
-        'direct6_'+ df_previous_matches_direct_home.columns,
+        'direct1_home_'+ df_previous_matches_direct_home.columns,
+        'direct3_home_'+ df_previous_matches_direct_home.columns,
+        'direct6_home_'+ df_previous_matches_direct_home.columns,
+        'direct1_away_'+ df_previous_matches_direct_away.columns,
+        'direct3_away_'+ df_previous_matches_direct_away.columns,
+        'direct6_away_'+ df_previous_matches_direct_away.columns,
     ])
     return home_away.iloc[0]
 
 def drop_columns(matches):
+    matches.sort_values('date', inplace=True, ascending=False)
     matches.drop(['MatchId','HomeTeamFullName','AwayTeamFullName','HomeTeamId','AwayTeamId','match_result','date'],axis =1,inplace=True)
 
 def process_matches_average(matches):
+    
     #matches["home_team_possession_avg"] = matches["home_team_possession_avg"].mean()
-    return [matches[:1].mean(axis = 0, skipna = True), matches[:3].mean(axis = 0, skipna = True), matches[:6].mean(axis = 0, skipna = True)]
+    return [matches[:1].mean(axis = 0, skipna = True), 
+        matches[:3].mean(axis = 0, skipna = True),
+        matches[:6].mean(axis = 0, skipna = True)]
 
 match_features = df_matches.apply(lambda x: get_match_features(x), axis = 1)
 print(match_features.head())
-match_features.to_csv('output/features2.csv',index=False)
+match_features.to_csv('output/features3.csv',index=False)
